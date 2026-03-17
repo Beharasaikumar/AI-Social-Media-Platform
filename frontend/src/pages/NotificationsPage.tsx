@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Heart, MessageCircle, UserPlus, Bell, CheckCheck, Loader2 } from "lucide-react";
 import { formatDate } from "../lib/utils";
 import type { Notification } from "../types";
-import { getNotifications, markAllRead } from "../api/notifications";
+import { getNotifications, markAllRead, markOneRead } from "../api/notifications";
 import { useNavigate } from "react-router-dom";
 import client from "../api/client";
 
@@ -28,16 +28,16 @@ function Avatar({ name, size = 38 }: { name: string; size?: number }) {
 }
 
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
-  LIKE:    { icon: Heart,         color: "#db2777", bg: "#fce7f3", label: "liked your post" },
+  LIKE: { icon: Heart, color: "#db2777", bg: "#fce7f3", label: "liked your post" },
   COMMENT: { icon: MessageCircle, color: "#2563eb", bg: "#dbeafe", label: "commented on your post" },
-  FOLLOW:  { icon: UserPlus,      color: "#059669", bg: "#d1fae5", label: "started following you" },
+  FOLLOW: { icon: UserPlus, color: "#059669", bg: "#d1fae5", label: "started following you" },
 };
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading]             = useState(true);
-  const [marking, setMarking]             = useState(false);
-  const navigate                          = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [marking, setMarking] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     getNotifications().then(setNotifications).finally(() => setLoading(false));
@@ -50,20 +50,20 @@ export default function NotificationsPage() {
     setMarking(false);
   };
 
-const handleClick = async (n: Notification) => {
-  setNotifications(prev =>
-    prev.map(notif => notif.id === n.id ? { ...notif, read: true } : notif)
-  );
-  try {
-    await client.patch(`/notifications/${n.id}/read`);
-  } catch { /* silent */ }
+  const handleClick = async (n: Notification) => {
+    setNotifications(prev =>
+      prev.map(notif => notif.id === n.id ? { ...notif, read: true } : notif)
+    );
+    try {
+      await markOneRead(n.id);
+    } catch { /* silent */ }
 
-  if ((n.type === "LIKE" || n.type === "COMMENT") && n.postId) {
-    navigate(`/post/${n.postId}`);
-  } else if (n.type === "FOLLOW") {
-    navigate(`/user/${n.actor.username}`);
-  }
-};
+    if ((n.type === "LIKE" || n.type === "COMMENT") && n.postId) {
+      navigate(`/post/${n.postId}`);
+    } else if (n.type === "FOLLOW") {
+      navigate(`/user/${n.actor.username}`);
+    }
+  };
 
   const unread = notifications.filter(n => !n.read).length;
   const isClickable = (n: Notification) =>
@@ -140,7 +140,7 @@ const handleClick = async (n: Notification) => {
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {notifications.map((n, idx) => {
-            const cfg  = TYPE_CONFIG[n.type] || TYPE_CONFIG.LIKE;
+            const cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.LIKE;
             const Icon = cfg.icon;
             const clickable = isClickable(n);
 

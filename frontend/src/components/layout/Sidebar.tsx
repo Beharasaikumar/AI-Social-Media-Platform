@@ -9,32 +9,37 @@ interface SidebarProps {
   displayName: string;
 }
 
-const navItems = [
-  { icon: Home,   label: "Home",          path: "/" },
-  { icon: Search, label: "Explore",       path: "/explore" },
-  { icon: Bell,   label: "Notifications", path: "/notifications" },
-  { icon: User,   label: "Profile",       path: "/profile" },
-];
-
 function getInitials(name: string) {
   return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 }
 
+const navItems = [
+  { icon: Home, label: "Home", path: "/" },
+  { icon: Search, label: "Explore", path: "/explore" },
+  { icon: Bell, label: "Notifications", path: "/notifications" },
+  { icon: User, label: "Profile", path: "/profile" },
+];
+
 export default function Sidebar({ onLogout, username, displayName }: SidebarProps) {
   const location = useLocation();
   const [unread, setUnread] = useState(0);
+  const onNotifPage = location.pathname === "/notifications";
 
-  useEffect(() => {
+  const fetchUnread = () => {
     client.get("/notifications").then(res => {
       setUnread(res.data.filter((n: any) => !n.read).length);
-    }).catch(() => {});
-    const interval = setInterval(() => {
-      client.get("/notifications").then(res => {
-        setUnread(res.data.filter((n: any) => !n.read).length);
-      }).catch(() => {});
-    }, 15000);
-    return () => clearInterval(interval);
-  }, []);
+    }).catch(() => { });
+  };
+
+  useEffect(() => {
+    if (onNotifPage) {
+      setUnread(0);
+      return;
+    }
+    fetchUnread();
+    // const interval = setInterval(fetchUnread, 30000); // 30s is enough
+    // return () => clearInterval(interval);
+  }, [onNotifPage]);
 
   return (
     <aside style={{
@@ -87,12 +92,12 @@ export default function Sidebar({ onLogout, username, displayName }: SidebarProp
                 cursor: "pointer",
                 position: "relative",
               }}
-              onMouseEnter={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = "#f8f9ff"; }}
-              onMouseLeave={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
+                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = "#f8f9ff"; }}
+                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
               >
                 <div style={{ position: "relative" }}>
                   <Icon size={18} strokeWidth={active ? 2.5 : 2} />
-                  {isNotif && unread > 0 && (
+                  {isNotif && unread > 0 && !onNotifPage && (
                     <span style={{
                       position: "absolute", top: -4, right: -4,
                       background: "var(--pink-500)", color: "white",
@@ -142,8 +147,8 @@ export default function Sidebar({ onLogout, username, displayName }: SidebarProp
           color: "var(--text-muted)", fontSize: "13px", fontWeight: 500,
           cursor: "pointer", transition: "all 0.15s",
         }}
-        onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fff1f2"; (e.currentTarget as HTMLButtonElement).style.color = "#e11d48"; }}
-        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "var(--text-muted)"; }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fff1f2"; (e.currentTarget as HTMLButtonElement).style.color = "#e11d48"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "var(--text-muted)"; }}
         >
           <LogOut size={15} /> Sign out
         </button>
