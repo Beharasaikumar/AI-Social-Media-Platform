@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
 import MainLayout from "./components/layout/MainLayout";
@@ -12,11 +11,9 @@ import UserProfilePage from "./pages/UserProfilePage";
 
 export default function App() {
   const { user, loading, login, logout } = useAuth();
-  const [currentUser, setCurrentUser] = useState(user);
 
   const handleLogin = (token: string, userData: any) => {
     login(token, userData);
-    setCurrentUser(userData);
   };
 
   if (loading) {
@@ -34,31 +31,60 @@ export default function App() {
           boxShadow: "0 8px 24px rgba(99,102,241,0.3)",
         }}>
           <div style={{
-            width: 20, height: 20, border: "2.5px solid rgba(255,255,255,0.4)",
-            borderTop: "2.5px solid white", borderRadius: "50%",
+            width: 20, height: 20,
+            border: "2.5px solid rgba(255,255,255,0.4)",
+            borderTop: "2.5px solid white",
+            borderRadius: "50%",
             animation: "spin 0.8s linear infinite",
           }} />
         </div>
-        <p style={{ color: "var(--text-muted)", fontSize: "13px", fontWeight: 500 }}>Loading CampusConnect…</p>
+        <p style={{ color: "var(--text-muted)", fontSize: "13px", fontWeight: 500 }}>
+          Loading CampusConnect…
+        </p>
       </div>
     );
   }
 
-  const activeUser = currentUser || user;
-  if (!activeUser) return <LoginPage onLogin={handleLogin} />;
-
   return (
     <BrowserRouter>
-      <MainLayout onLogout={logout} username={activeUser.username} displayName={activeUser.displayName}>
-        <Routes>
-          <Route path="/" element={<FeedPage />} />
-<Route path="/explore" element={<ExplorePage currentUserId={activeUser.id} />} />          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/profile" element={<ProfilePage user={activeUser} onUserUpdate={u => setCurrentUser(u)} />} />
-            <Route path="/post/:id" element={<PostPage />} />
-            <Route path="/user/:username" element={<UserProfilePage />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </MainLayout>
+      <Routes>
+
+        {!user && (
+          <Route path="*" element={<LoginPage onLogin={handleLogin} />} />
+        )}
+
+        {user && (
+          <Route
+            path="*"
+            element={
+              <MainLayout
+                onLogout={logout}
+                username={user.username}
+                displayName={user.displayName}
+              >
+                <Routes>
+                  <Route path="/" element={<FeedPage />} />
+                  <Route path="/explore" element={<ExplorePage currentUserId={user.id} />} />
+                  <Route path="/notifications" element={<NotificationsPage />} />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProfilePage
+                        user={user}
+                        onUserUpdate={() => {}} 
+                      />
+                    }
+                  />
+                  <Route path="/post/:id" element={<PostPage />} />
+                  <Route path="/user/:username" element={<UserProfilePage />} />
+                  <Route path="*" element={<Navigate to="/" />} />
+                </Routes>
+              </MainLayout>
+            }
+          />
+        )}
+
+      </Routes>
     </BrowserRouter>
   );
 }
