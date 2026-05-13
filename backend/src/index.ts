@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth";
 import postRoutes from "./routes/posts";
 import notificationRoutes from "./routes/notifications";
 import aiRoutes from "./routes/ai";
+import dmRoutes from "./routes/dm";
 
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/dm", dmRoutes);
 
 app.get("/health", (_, res) => res.json({ status: "ok" }));
 

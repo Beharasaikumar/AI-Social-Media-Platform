@@ -7,45 +7,100 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ╔══════════════════════════════════════════════════════════╗
+   ║  LIGHT MODE                                              ║
+   ╚══════════════════════════════════════════════════════════╝ */
 :root {
-  --brand-50: #eef2ff;
+  --brand-50:  #eef2ff;
   --brand-100: #e0e7ff;
   --brand-200: #c7d2fe;
+  --brand-300: #a5b4fc;
   --brand-400: #818cf8;
   --brand-500: #6366f1;
   --brand-600: #4f46e5;
   --brand-700: #4338ca;
-  --pink-400: #f472b6;
-  --pink-500: #ec4899;
-  --amber-400: #fbbf24;
-  --teal-400: #2dd4bf;
-  --teal-500: #14b8a6;
-  --surface: #ffffff;
-  --surface-2: #f8f9ff;
-  --surface-3: #f1f3ff;
-  --border: #e8eaf6;
+  --pink-400:  #f472b6;
+  --pink-500:  #ec4899;
+
+  --bg-page:    #f2f3f9;
+  --card-bg:    #ffffff;
+  --surface-2:  #f7f8ff;
+  --surface-3:  #eef0fa;
+  --input-bg:   #f5f6fd;
+  --sidebar-bg: #ffffff;
+
+  --border:        #e4e6f0;
   --border-strong: #c7d2fe;
-  --text-primary: #0f1117;
-  --text-secondary: #4b5563;
-  --text-muted: #9ca3af;
+
+  --text-primary:   #0c0e1a;
+  --text-secondary: #3d4060;
+  --text-muted:     #8c8fa8;
+
   --sidebar-w: 260px;
+
+  --shadow-sm:    0 1px 3px rgba(0,0,0,0.06);
+  --shadow-card:  0 1px 4px rgba(0,0,0,0.06), 0 2px 8px rgba(99,102,241,0.04);
+  --shadow-hover: 0 6px 24px rgba(99,102,241,0.13), 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-modal: 0 24px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.06);
 }
 
-* { box-sizing: border-box; }
+/* ╔══════════════════════════════════════════════════════════╗
+   ║  DARK MODE  — Rich midnight with clear visual hierarchy  ║
+   ╚══════════════════════════════════════════════════════════╝ */
+[data-theme="dark"] {
+  --brand-50:  rgba(99,102,241,0.14);
+  --brand-100: rgba(99,102,241,0.22);
+  --brand-200: rgba(99,102,241,0.35);
+  --brand-300: #6366f1;
+  --brand-400: #818cf8;
+  --brand-500: #818cf8;
+  --brand-600: #a5b4fc;
+  --brand-700: #c7d2fe;
+  --pink-400:  #f472b6;
+  --pink-500:  #ec4899;
+
+  /* Well-differentiated dark surfaces — each step clearly distinct */
+  --bg-page:    #0d0e17;   /* deepest page background */
+  --card-bg:    #13141f;   /* cards, panels, conversation list */
+  --surface-2:  #1a1b2e;   /* inputs, secondary surfaces */
+  --surface-3:  #21223a;   /* chips, hover targets, active states */
+  --input-bg:   #1a1b2e;
+  --sidebar-bg: #0f1020;   /* sidebar slightly distinct from page */
+
+  /* Crisp, visible borders with better contrast */
+  --border:        #2a2c45;
+  --border-strong: #5c5ff0;
+
+  /* Warm, easy-to-read text tones */
+  --text-primary:   #e8e9f8;  /* soft lavender-white, not harsh pure white */
+  --text-secondary: #9496b8;  /* clear secondary, not washed out */
+  --text-muted:     #525570;  /* muted but still readable */
+
+  --shadow-sm:    0 1px 4px rgba(0,0,0,0.6);
+  --shadow-card:  0 2px 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+  --shadow-hover: 0 8px 32px rgba(99,102,241,0.28), 0 2px 12px rgba(0,0,0,0.6);
+  --shadow-modal: 0 24px 72px rgba(0,0,0,0.8), 0 4px 20px rgba(0,0,0,0.6);
+}
+
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
 
 body {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  background: var(--surface-2);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: var(--bg-page);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  line-height: 1.5;
 }
 
-/* Scrollbar */
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #252638; }
 
-/* Animations */
+/* ── Keyframes ─────────────────────────────────────────────────────────────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -53,106 +108,286 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; } to { opacity: 1; }
 }
+@keyframes bounceIn {
+  0%   { transform: scale(0.84); opacity: 0; }
+  60%  { transform: scale(1.04); }
+  100% { transform: scale(1);    opacity: 1; }
+}
+@keyframes shimmerAnim {
+  0%   { background-position: -300% 0; }
+  100% { background-position:  300% 0; }
+}
 @keyframes pulse-dot {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%       { transform: scale(1.4); opacity: 0.7; }
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.6); opacity: 0.5; }
 }
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.5); }
+  60%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
 }
-@keyframes slideInRight {
+@keyframes slideRight {
   from { opacity: 0; transform: translateX(16px); }
   to   { opacity: 1; transform: translateX(0); }
 }
-@keyframes bounceIn {
-  0%   { transform: scale(0.8); opacity: 0; }
-  60%  { transform: scale(1.1); }
-  100% { transform: scale(1);   opacity: 1; }
+
+/* ── Animation classes ─────────────────────────────────────────────────────── */
+.animate-fade-up   { animation: fadeUp    0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
+.animate-fade-in   { animation: fadeIn    0.25s ease forwards; }
+.animate-bounce-in { animation: bounceIn  0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
+.animate-slide-in  { animation: slideRight 0.3s ease forwards; }
+.animate-spin      { animation: spin 0.85s linear infinite; }
+
+.stagger-1 { animation-delay: 0.04s; opacity: 0; }
+.stagger-2 { animation-delay: 0.08s; opacity: 0; }
+.stagger-3 { animation-delay: 0.13s; opacity: 0; }
+.stagger-4 { animation-delay: 0.18s; opacity: 0; }
+
+/* ── Shimmer ───────────────────────────────────────────────────────────────── */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 25%,
+    var(--border)    50%,
+    var(--surface-2) 75%
+  );
+  background-size: 300% 100%;
+  animation: shimmerAnim 1.7s ease-in-out infinite;
 }
 
-.animate-fade-up   { animation: fadeUp 0.4s ease forwards; }
-.animate-fade-in   { animation: fadeIn 0.3s ease forwards; }
-.animate-slide-in  { animation: slideInRight 0.35s ease forwards; }
-.animate-bounce-in { animation: bounceIn 0.4s ease forwards; }
-
-.stagger-1 { animation-delay: 0.05s; opacity: 0; }
-.stagger-2 { animation-delay: 0.10s; opacity: 0; }
-.stagger-3 { animation-delay: 0.15s; opacity: 0; }
-.stagger-4 { animation-delay: 0.20s; opacity: 0; }
-
-/* Gradient text */
+/* ── Gradient text ─────────────────────────────────────────────────────────── */
 .gradient-text {
-  background: linear-gradient(135deg, var(--brand-500) 0%, var(--pink-500) 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Glass card */
-.glass-card {
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border);
-}
+/* ── Heart pop ─────────────────────────────────────────────────────────────── */
+.heart-pop { transition: transform 0.18s cubic-bezier(0.34,1.56,0.64,1); }
+.heart-pop:active { animation: heartPop 0.35s ease; }
 
-/* Shimmer skeleton */
-.shimmer {
-  background: linear-gradient(90deg, #f1f3ff 25%, #e8eaf6 50%, #f1f3ff 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-/* Notification dot */
-.notif-dot {
-  width: 8px; height: 8px;
-  background: var(--pink-500);
-  border-radius: 50%;
-  animation: pulse-dot 2s infinite;
-}
-
-/* Like button heart pop */
-.heart-pop { transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1); }
-.heart-pop:active { transform: scale(1.4); }
-
-/* Post card hover */
-.post-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.post-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(99,102,241,0.08);
-}
-
-/* AI glow button */
+/* ── AI button ─────────────────────────────────────────────────────────────── */
 .ai-btn {
   background: linear-gradient(135deg, #6366f1, #ec4899);
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 99px;
   padding: 6px 14px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: inherit;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s;
-  display: flex; align-items: center; gap: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 2px 12px rgba(99,102,241,0.35);
 }
-.ai-btn:hover { opacity: 0.9; transform: scale(1.03); }
+.ai-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.04);
+  box-shadow: 0 4px 20px rgba(99,102,241,0.5);
+}
 
-/* Tone chip */
+/* ── Tone chips ────────────────────────────────────────────────────────────── */
 .tone-chip {
-  padding: 4px 12px;
+  padding: 5px 12px;
   border-radius: 99px;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   border: 1.5px solid var(--border);
-  background: white;
+  background: var(--card-bg);
   color: var(--text-secondary);
+  font-family: inherit;
   transition: all 0.15s;
 }
 .tone-chip:hover, .tone-chip.active {
-  border-color: var(--brand-500);
+  border-color: var(--brand-400);
   background: var(--brand-50);
   color: var(--brand-600);
+}
+
+/* ── Notification pulse dot ────────────────────────────────────────────────── */
+.notif-dot {
+  width: 8px; height: 8px;
+  background: var(--pink-500);
+  border-radius: 50%;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ── Dark-mode action pills (like, comment, repost…) ───────────────────────── */
+[data-theme="dark"] button {
+  color-scheme: dark;
+}
+
+/* Like button active state in dark */
+[data-theme="dark"] .liked-btn {
+  background: rgba(219,39,119,0.15) !important;
+  border-color: rgba(249,168,212,0.4) !important;
+  color: #f472b6 !important;
+}
+
+/* Repost active in dark */
+[data-theme="dark"] .reposted-btn {
+  background: rgba(5,150,105,0.12) !important;
+  border-color: rgba(110,231,183,0.3) !important;
+  color: #34d399 !important;
+}
+
+/* Bookmarked in dark */
+[data-theme="dark"] .bookmarked-btn {
+  color: #818cf8 !important;
+}
+
+/* ── Comment in dark ────────────────────────────────────────────────────────── */
+[data-theme="dark"] .comment-bubble {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── Quote card in dark ─────────────────────────────────────────────────────── */
+[data-theme="dark"] .quote-card {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── Dropdown + context menus in dark ──────────────────────────────────────── */
+[data-theme="dark"] .context-menu {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.7) !important;
+}
+
+/* ── Reaction picker dark ───────────────────────────────────────────────────── */
+[data-theme="dark"] .reaction-picker {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.6) !important;
+}
+
+/* ── Modal overlay ──────────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.2s ease;
+}
+[data-theme="dark"] .modal-overlay {
+  background: rgba(0,0,0,0.72);
+}
+
+/* ── Input focus ring in dark ───────────────────────────────────────────────── */
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: var(--brand-400) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
+
+/* ── Sidebar nav dark tweaks ────────────────────────────────────────────────── */
+[data-theme="dark"] .sidebar-nav-active {
+  background: rgba(129,140,248,0.14) !important;
+  color: #a5b4fc !important;
+}
+[data-theme="dark"] .sidebar-nav-item:hover {
+  background: rgba(255,255,255,0.05) !important;
+}
+
+/* ── Profile banner in dark ─────────────────────────────────────────────────── */
+[data-theme="dark"] .profile-banner {
+  background: linear-gradient(135deg, #1e1b4b 0%, #1a1b28 40%, #1f1028 100%) !important;
+}
+
+/* ── Explore AI summary in dark ─────────────────────────────────────────────── */
+[data-theme="dark"] .ai-summary-card {
+  background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(236,72,153,0.08)) !important;
+  border-color: rgba(99,102,241,0.35) !important;
+}
+
+/* ── Trending topic # badge dark ────────────────────────────────────────────── */
+[data-theme="dark"] .trend-badge {
+  background: var(--surface-3) !important;
+  color: var(--brand-500) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── DM message area dark ───────────────────────────────────────────────────── */
+[data-theme="dark"] .dm-area {
+  background: #0d0e17 !important;
+}
+
+/* ── DM bubble — outgoing in dark ───────────────────────────────────────────── */
+[data-theme="dark"] .bubble-out {
+  background: linear-gradient(135deg, #4f46e5, #5a5cf8) !important;
+}
+
+/* ── Incoming bubble in dark mode — distinguish from background ──────────────── */
+[data-theme="dark"] .bubble-in {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ── Tab pills (explore, profile) ───────────────────────────────────────────── */
+[data-theme="dark"] .tab-pill-container {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+}
+[data-theme="dark"] .tab-pill-active {
+  background: var(--surface-3) !important;
+  color: #a5b4fc !important;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.2) !important;
+}
+
+/* ── Notification items dark ────────────────────────────────────────────────── */
+[data-theme="dark"] .notif-unread {
+  background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(236,72,153,0.05)) !important;
+  border-color: rgba(99,102,241,0.3) !important;
+}
+
+/* ── Left panel (login page) ────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .left-panel { display: flex !important; }
+}
+/* ── Dark mode enhancements ──────────────────────────────────────────────────── */
+
+/* Active conversation item in dark mode */
+[data-theme="dark"] button[style*="eef2ff"] {
+  background: rgba(99,102,241,0.18) !important;
+  border-left-color: #818cf8 !important;
+}
+
+/* Highlight search term in dark mode */
+[data-theme="dark"] mark {
+  background: rgba(99,102,241,0.3) !important;
+  color: #a5b4fc !important;
+}
+
+/* Input placeholder dark mode */
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+/* Scrollbar dark refinement */
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #2e3050;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #3d4070;
+}
+
+/* Post content color override in dark */
+[data-theme="dark"] p[style*="color: \"#374151\""] {
+  color: var(--text-primary) !important;
 }

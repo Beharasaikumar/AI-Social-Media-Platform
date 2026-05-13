@@ -78,10 +78,10 @@ export default function ExplorePage({ currentUserId }: { currentUserId: string }
     setLoading(true);
     const lower = q.toLowerCase();
     const filtered = allPosts.filter(p =>
-      p.content.toLowerCase().includes(lower) ||
-      p.author.displayName.toLowerCase().includes(lower) ||
-      p.author.username.toLowerCase().includes(lower)
-    );
+  (p.content || "").toLowerCase().includes(lower) ||
+  p.author.displayName.toLowerCase().includes(lower) ||
+  p.author.username.toLowerCase().includes(lower)
+);
     setPosts(filtered);
     setLoading(false);
     if (filtered.length > 0) fetchAiSummary(q, filtered);
@@ -112,8 +112,8 @@ export default function ExplorePage({ currentUserId }: { currentUserId: string }
     ]);
     const wordScore: Record<string, number> = {};
     allPosts.forEach(post => {
-      const words = post.content
-        .toLowerCase()
+      const words = (post.content || "")
+  .toLowerCase()
         .replace(/[^a-z0-9\s]/g, "")
         .split(/\s+/)
         .filter(w => w.length > 3 && !stopWords.has(w));
@@ -171,7 +171,7 @@ export default function ExplorePage({ currentUserId }: { currentUserId: string }
             width: "100%", padding: "12px 40px", borderRadius: "14px",
             border: "1.5px solid var(--border)", fontSize: "14px",
             fontFamily: "inherit", outline: "none",
-            background: "white", color: "var(--text-primary)",
+            background: "var(--input-bg)", color: "var(--text-primary)",
             boxShadow: "0 2px 12px rgba(99,102,241,0.06)",
             transition: "border-color 0.15s, box-shadow 0.15s",
           }}
@@ -244,7 +244,7 @@ export default function ExplorePage({ currentUserId }: { currentUserId: string }
                 padding: "7px 16px", borderRadius: "9px",
                 border: "none", fontSize: "13px", fontWeight: 600,
                 cursor: "pointer", transition: "all 0.15s",
-                background: tab === t ? "white" : "transparent",
+                background: tab === t ? "var(--card-bg)" : "transparent",
                 color: tab === t ? "var(--brand-600)" : "var(--text-muted)",
                 boxShadow: tab === t ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
                 display: "flex", alignItems: "center", gap: "6px",
@@ -268,7 +268,7 @@ export default function ExplorePage({ currentUserId }: { currentUserId: string }
               <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                 {[1, 2, 3].map(i => (
                   <div key={i} style={{
-                    background: "white", borderRadius: "16px", padding: "18px",
+                    background: "var(--card-bg)", borderRadius: "16px", padding: "18px",
                     border: "1.5px solid var(--border)", display: "flex", gap: "12px",
                   }}>
                     <div className="shimmer" style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0 }} />
@@ -282,7 +282,7 @@ export default function ExplorePage({ currentUserId }: { currentUserId: string }
               </div>
             ) : posts.length === 0 ? (
               <div style={{
-                background: "white", borderRadius: "16px", padding: "48px 24px",
+                background: "var(--card-bg)", borderRadius: "16px", padding: "48px 24px",
                 textAlign: "center", border: "1.5px solid var(--border)",
               }}>
                 <Search size={28} style={{ color: "#e2e8f0", margin: "0 auto 12px", display: "block" }} />
@@ -297,7 +297,7 @@ export default function ExplorePage({ currentUserId }: { currentUserId: string }
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {posts.map(post => (
                   <div key={post.id} style={{
-                    background: "white", borderRadius: "16px",
+                    background: "var(--card-bg)", borderRadius: "16px",
                     border: "1.5px solid var(--border)", overflow: "hidden",
                     transition: "transform 0.2s, box-shadow 0.2s",
                     boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
@@ -332,7 +332,7 @@ export default function ExplorePage({ currentUserId }: { currentUserId: string }
                           {post.content && (
                             <p style={{
                               fontSize: "13px", lineHeight: 1.75,
-                              color: "#374151", margin: "8px 0 0",
+                              color: "var(--text-primary)", margin: "8px 0 0",
                               wordBreak: "break-word",
                             }}>
                               {query ? highlightText(post.content, query) : post.content}
@@ -378,7 +378,7 @@ export default function ExplorePage({ currentUserId }: { currentUserId: string }
               style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {people.length === 0 ? (
                 <div style={{
-                  background: "white", borderRadius: "16px", padding: "48px 24px",
+                  background: "var(--card-bg)", borderRadius: "16px", padding: "48px 24px",
                   textAlign: "center", border: "1.5px solid var(--border)",
                 }}>
                   <Users size={28} style={{ color: "#e2e8f0", margin: "0 auto 12px", display: "block" }} />
@@ -390,7 +390,7 @@ export default function ExplorePage({ currentUserId }: { currentUserId: string }
                   <div key={u.id}
                     onClick={() => navigate(`/user/${u.username}`)}
                     style={{
-                      background: "white", borderRadius: "14px", padding: "14px 16px",
+                      background: "var(--card-bg)", borderRadius: "14px", padding: "14px 16px",
                       border: "1.5px solid var(--border)",
                       display: "flex", alignItems: "center", gap: "12px",
                       transition: "transform 0.2s, box-shadow 0.2s",
@@ -430,7 +430,7 @@ export default function ExplorePage({ currentUserId }: { currentUserId: string }
 
           {/* Trending topics */}
           <div style={{
-            background: "white", borderRadius: "16px",
+            background: "var(--card-bg)", borderRadius: "16px",
             border: "1.5px solid var(--border)", overflow: "hidden",
             boxShadow: "0 2px 12px rgba(99,102,241,0.05)",
           }}>
@@ -492,7 +492,7 @@ export default function ExplorePage({ currentUserId }: { currentUserId: string }
 
           {/* People on campus */}
           <div style={{
-            background: "white", borderRadius: "16px",
+            background: "var(--card-bg)", borderRadius: "16px",
             border: "1.5px solid var(--border)", overflow: "hidden",
             boxShadow: "0 2px 12px rgba(99,102,241,0.05)",
           }}>

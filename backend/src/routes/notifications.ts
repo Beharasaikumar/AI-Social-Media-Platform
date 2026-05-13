@@ -13,7 +13,7 @@ router.get("/", authenticate, async (req: AuthRequest, res: Response) => {
        JOIN users u ON u.id = n.actor_id
        WHERE n.user_id = $1
        ORDER BY n.created_at DESC
-       LIMIT 30`,
+       LIMIT 50`,
       [req.userId]
     );
     res.json(result.rows.map((r) => ({
@@ -37,13 +37,11 @@ router.patch("/read-all", authenticate, async (req: AuthRequest, res: Response) 
 
 router.patch("/:id/read", authenticate, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
-
   try {
     await pool.query(
       "UPDATE notifications SET read = TRUE WHERE id = $1 AND user_id = $2",
       [id, req.userId]
     );
-
     res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ message: err.message });

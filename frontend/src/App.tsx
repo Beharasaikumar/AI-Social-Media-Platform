@@ -1,5 +1,7 @@
+// src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./hooks/useAuth";
+import { useDarkMode } from "./hooks/useDarkMode";
 import MainLayout from "./components/layout/MainLayout";
 import LoginPage from "./pages/LoginPage";
 import FeedPage from "./pages/FeedPage";
@@ -8,21 +10,19 @@ import ProfilePage from "./pages/ProfilePage";
 import ExplorePage from "./pages/ExplorePage";
 import PostPage from "./pages/PostPage";
 import UserProfilePage from "./pages/UserProfilePage";
+import DMPage from "./pages/DMPage";
+import BookmarksPage from "./pages/BookmarksPage";
 
 export default function App() {
-  const { user, loading, login, logout } = useAuth();
-
-  const handleLogin = (token: string, userData: any) => {
-    login(token, userData);
-  };
+  const { user, loading, login, logout, updateUser } = useAuth();
+  const { dark, toggle: toggleDark } = useDarkMode();
 
   if (loading) {
     return (
       <div style={{
         minHeight: "100vh", display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
-        background: "linear-gradient(135deg, #eef2ff, #fdf2f8)",
-        gap: "16px",
+        background: "linear-gradient(135deg, #eef2ff, #fdf2f8)", gap: "16px",
       }}>
         <div style={{
           width: 44, height: 44, borderRadius: "14px",
@@ -48,9 +48,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-
         {!user && (
-          <Route path="*" element={<LoginPage onLogin={handleLogin} />} />
+          <Route path="*" element={<LoginPage onLogin={login} />} />
         )}
 
         {user && (
@@ -61,29 +60,25 @@ export default function App() {
                 onLogout={logout}
                 username={user.username}
                 displayName={user.displayName}
+                dark={dark}
+                onToggleDark={toggleDark}
               >
                 <Routes>
-                  <Route path="/" element={<FeedPage />} />
-                  <Route path="/explore" element={<ExplorePage currentUserId={user.id} />} />
+                  <Route path="/"              element={<FeedPage currentUserId={user.id} />} />
+                  <Route path="/explore"       element={<ExplorePage currentUserId={user.id} />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
-                  <Route
-                    path="/profile"
-                    element={
-                      <ProfilePage
-                        user={user}
-                        onUserUpdate={() => {}} 
-                      />
-                    }
-                  />
-                  <Route path="/post/:id" element={<PostPage />} />
-                  <Route path="/user/:username" element={<UserProfilePage />} />
-                  <Route path="*" element={<Navigate to="/" />} />
+                  <Route path="/bookmarks"     element={<BookmarksPage />} />
+                  <Route path="/profile"       element={<ProfilePage user={user} onUserUpdate={updateUser} />} />
+                  <Route path="/post/:id"      element={<PostPage />} />
+                  <Route path="/user/:username"             element={<UserProfilePage />} />
+                  <Route path="/messages"                   element={<DMPage currentUserId={user.id} />} />
+                  <Route path="/messages/:conversationId"   element={<DMPage currentUserId={user.id} />} />
+                  <Route path="*"              element={<Navigate to="/" />} />
                 </Routes>
               </MainLayout>
             }
           />
         )}
-
       </Routes>
     </BrowserRouter>
   );

@@ -1,3 +1,7 @@
+// src/routes/auth.ts
+// IMPORTANT: The old router.patch("/profile") that only updated displayName+bio
+// has been REMOVED. Only the new one (with username support) exists now.
+
 import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -102,18 +106,66 @@ router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
   }
 });
 
+// ── PATCH /profile ─────────────────────────────────────────────────────────────
+// Supports updating displayName, bio, AND username.
+// Only one definition of this route — the old one has been removed.
 router.patch("/profile", authenticate, async (req: AuthRequest, res: Response) => {
-  const { displayName, bio } = req.body;
+  const { displayName, bio, username } = req.body;
+
+  if (!displayName?.trim()) {
+    return res.status(400).json({ message: "Display name is required" });
+  }
+
   try {
+    const newUsername = username?.trim().toLowerCase();
+
+    if (newUsername) {
+      if (!/^[a-zA-Z0-9_]{3,20}$/.test(newUsername)) {
+        return res.status(400).json({
+          message: "Username must be 3–20 characters: letters, numbers, underscores only",
+        });
+      }
+      const conflict = await pool.query(
+        "SELECT id FROM users WHERE username = $1 AND id != $2",
+        [newUsername, req.userId]
+      );
+      if (conflict.rows.length > 0) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+      const result = await pool.query(
+        `UPDATE users
+         SET display_name = $1, bio = $2, username = $3
+         WHERE id = $4
+         RETURNING id, username, display_name, bio, avatar_url, created_at`,
+        [displayName.trim(), bio ?? "", newUsername, req.userId]
+      );
+      const u = result.rows[0];
+      return res.json({
+        id: u.id,
+        username: u.username,
+        displayName: u.display_name,
+        bio: u.bio,
+        avatarUrl: u.avatar_url,
+        createdAt: u.created_at,
+      });
+    }
+
+    // No username supplied — update displayName + bio only
     const result = await pool.query(
-      `UPDATE users SET display_name = $1, bio = $2 WHERE id = $3
+      `UPDATE users
+       SET display_name = $1, bio = $2
+       WHERE id = $3
        RETURNING id, username, display_name, bio, avatar_url, created_at`,
-      [displayName, bio, req.userId]
+      [displayName.trim(), bio ?? "", req.userId]
     );
     const u = result.rows[0];
-    res.json({
-      id: u.id, username: u.username, displayName: u.display_name,
-      bio: u.bio, avatarUrl: u.avatar_url, createdAt: u.created_at,
+    return res.json({
+      id: u.id,
+      username: u.username,
+      displayName: u.display_name,
+      bio: u.bio,
+      avatarUrl: u.avatar_url,
+      createdAt: u.created_at,
     });
   } catch (err: any) {
     res.status(500).json({ message: err.message });

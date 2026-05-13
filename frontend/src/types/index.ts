@@ -8,15 +8,27 @@ export interface User {
   _count?: { posts: number; followers: number; following: number; };
 }
 
+export interface Reaction {
+  emoji: string;
+  count: number;
+}
+
 export interface Post {
   id: string;
-  content: string;
+  content: string | null;
   mediaUrl?: string;
   mediaType?: "image" | "video";
   author: User;
   createdAt: string;
-  _count?: { comments: number; likes: number; };
+  updatedAt?: string;
+  repostOfId?: string;
+  repostOf?: Post;
+  _count?: { comments: number; likes: number; reposts: number; reactions: number; };
   likedByMe?: boolean;
+  repostedByMe?: boolean;
+  bookmarkedByMe?: boolean;
+  myReaction?: string | null;
+  reactions?: Reaction[];
 }
 
 export interface Comment {
@@ -29,7 +41,7 @@ export interface Comment {
 
 export interface Notification {
   id: string;
-  type: "LIKE" | "COMMENT" | "FOLLOW";
+  type: "LIKE" | "COMMENT" | "FOLLOW" | "MENTION";
   read: boolean;
   createdAt: string;
   postId?: string;
@@ -40,4 +52,20 @@ export interface Notification {
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+export interface DMConversation {
+  id: string;
+  createdAt: string;
+  other: { id: string; username: string; displayName: string };
+  lastMessage: { content: string; createdAt: string; senderId: string } | null;
+  unreadCount: number;
+}
+
+export interface DMMessage {
+  id: string;
+  content: string;
+  read: boolean;
+  createdAt: string;
+  sender: { id: string; username: string; displayName: string };
 }

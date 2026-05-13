@@ -6,12 +6,22 @@ interface MainLayoutProps {
   onLogout: () => void;
   username: string;
   displayName: string;
+  dark: boolean;
+  onToggleDark: () => void;
 }
 
-export default function MainLayout({ children, onLogout, username, displayName }: MainLayoutProps) {
+export default function MainLayout({
+  children, onLogout, username, displayName, dark, onToggleDark,
+}: MainLayoutProps) {
   return (
-    <div style={{ minHeight: "100vh", background: "var(--surface-2)" }}>
-      <Sidebar onLogout={onLogout} username={username} displayName={displayName} />
+    <div style={{ minHeight: "100vh", background: "var(--bg-page)", transition: "background 0.3s" }}>
+      <Sidebar
+        onLogout={onLogout}
+        username={username}
+        displayName={displayName}
+        dark={dark}
+        onToggleDark={onToggleDark}
+      />
       <main style={{ marginLeft: "var(--sidebar-w)", minHeight: "100vh" }}>
         <div style={{ maxWidth: "780px", margin: "0 auto", padding: "32px 24px" }}>
           {children}

@@ -1,33 +1,47 @@
+// src/hooks/useAuth.ts
+
 import { useState, useEffect } from "react";
 import type { User } from "../types";
-import client from "../api/client";
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setLoading(false);
-      return;
+    const token    = localStorage.getItem("token");
+    const userData = localStorage.getItem("user");
+    if (token && userData) {
+      try { setUser(JSON.parse(userData)); }
+      catch {
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      }
     }
-    client
-      .get("/auth/me")
-      .then((res) => setUser(res.data))
-      .catch(() => localStorage.removeItem("token"))
-      .finally(() => setLoading(false));
+    setLoading(false);
   }, []);
 
   const login = (token: string, userData: User) => {
     localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setUser(null);
   };
 
-  return { user, loading, login, logout };
+  // Merges a partial update (e.g. { username, displayName, bio })
+  // into the current user and persists to localStorage immediately.
+  const updateUser = (updated: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const next = { ...prev, ...updated };
+      localStorage.setItem("user", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  return { user, loading, login, logout, updateUser };
 }
