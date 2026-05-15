@@ -5,7 +5,14 @@ export interface User {
   bio?: string;
   avatarUrl?: string;
   createdAt: string;
-  _count?: { posts: number; followers: number; following: number; };
+
+  isAdmin?: boolean;
+
+  _count?: {
+    posts: number;
+    followers: number;
+    following: number;
+  };
 }
 
 export interface Reaction {

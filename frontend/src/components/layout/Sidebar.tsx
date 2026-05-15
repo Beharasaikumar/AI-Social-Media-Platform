@@ -1,4 +1,5 @@
-import { Home, Bell, User, Search, LogOut, Zap, MessageSquare, Bookmark, Moon, Sun } from "lucide-react";
+// src/components/layout/Sidebar.tsx
+import { Home, Bell, User, Search, LogOut, Zap, MessageSquare, Bookmark, Moon, Sun, Briefcase, FileText, LayoutDashboard } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import client from "../../api/client";
@@ -9,54 +10,63 @@ interface SidebarProps {
   displayName: string;
   dark: boolean;
   onToggleDark: () => void;
+  isAdmin?: boolean;
 }
 
 function getInitials(name: string) {
   return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 }
 
-const navItems = [
+const studentNavItems = [
   { icon: Home,          label: "Home",          path: "/" },
   { icon: Search,        label: "Explore",        path: "/explore" },
-  { icon: MessageSquare, label: "Messages",        path: "/messages" },
-  { icon: Bell,          label: "Notifications",  path: "/notifications" },
-  { icon: Bookmark,      label: "Bookmarks",       path: "/bookmarks" },
-  { icon: User,          label: "Profile",         path: "/profile" },
+  { icon: Briefcase,     label: "Placements",     path: "/placements" },
+  { icon: Bell,          label: "Announcements",  path: "/announcements" },
+  { icon: FileText,      label: "Materials",      path: "/materials" },
+  { icon: MessageSquare, label: "Messages",       path: "/messages" },
+  { icon: Bookmark,      label: "Bookmarks",      path: "/bookmarks" },
+  { icon: User,          label: "Profile",        path: "/profile" },
 ];
 
-export default function Sidebar({ onLogout, username, displayName, dark, onToggleDark }: SidebarProps) {
+const adminNavItems = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
+];
+
+export default function Sidebar({ onLogout, username, displayName, dark, onToggleDark, isAdmin }: SidebarProps) {
   const [dmUnread, setDmUnread] = useState(0);
+  const [notifUnread, setNotifUnread] = useState(0);
   const location = useLocation();
-  const [unread, setUnread] = useState(0);
+  const navItems = isAdmin ? adminNavItems : studentNavItems;
   const onNotifPage = location.pathname === "/notifications";
 
   useEffect(() => {
+    if (isAdmin) return;
     import("../../api/dm").then(({ getUnreadCount }) => {
       const fetch = () => getUnreadCount().then(setDmUnread).catch(() => {});
       fetch();
       const iv = setInterval(fetch, 15_000);
       return () => clearInterval(iv);
     });
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => {
-    if (onNotifPage) { setUnread(0); return; }
+    if (isAdmin || onNotifPage) { setNotifUnread(0); return; }
     client.get("/notifications")
-      .then(res => setUnread(res.data.filter((n: any) => !n.read).length))
+      .then(res => setNotifUnread(res.data.filter((n: any) => !n.read).length))
       .catch(() => {});
-  }, [onNotifPage]);
+  }, [onNotifPage, isAdmin]);
 
-  const sidebarBg = dark ? "var(--sidebar-bg)" : "#ffffff";
-  const activeBg  = dark ? "rgba(129,140,248,0.14)" : "var(--brand-50)";
+  const sidebarBg  = dark ? "var(--sidebar-bg)" : "#ffffff";
+  const activeBg   = dark ? "rgba(129,140,248,0.14)" : "var(--brand-50)";
   const activeColor = dark ? "#a5b4fc" : "var(--brand-600)";
-  const hoverBg   = dark ? "rgba(255,255,255,0.05)" : "#f4f5ff";
+  const hoverBg    = dark ? "rgba(255,255,255,0.05)" : "#f4f5ff";
 
   return (
     <aside style={{
       position: "fixed", left: 0, top: 0, height: "100%",
       width: "var(--sidebar-w)",
       background: sidebarBg,
-      borderRight: `1px solid var(--border)`,
+      borderRight: "1px solid var(--border)",
       display: "flex", flexDirection: "column",
       padding: "24px 14px",
       zIndex: 50,
@@ -82,16 +92,18 @@ export default function Sidebar({ onLogout, username, displayName, dark, onToggl
           </span>
         </div>
         <p style={{ fontSize: "10.5px", color: "var(--text-muted)", paddingLeft: "43px", fontWeight: 500 }}>
-          Your college social space
+          {isAdmin ? "Admin panel" : "Your college social space"}
         </p>
       </div>
 
       {/* Nav */}
       <nav style={{ display: "flex", flexDirection: "column", gap: "3px", flex: 1 }}>
         {navItems.map(({ icon: Icon, label, path }) => {
-          const active = location.pathname === path || (path === "/" && location.pathname === "/");
+          const active = location.pathname === path ||
+            (path === "/" && location.pathname === "/") ||
+            (path === "/admin" && location.pathname === "/");
           const isNotif = path === "/notifications";
-          const isDM = path === "/messages";
+          const isDM    = path === "/messages";
           return (
             <Link key={path} to={path} style={{ textDecoration: "none" }}>
               <div
@@ -112,7 +124,7 @@ export default function Sidebar({ onLogout, username, displayName, dark, onToggl
               >
                 <div style={{ position: "relative", flexShrink: 0 }}>
                   <Icon size={17} strokeWidth={active ? 2.5 : 2} />
-                  {isNotif && unread > 0 && !onNotifPage && (
+                  {isNotif && notifUnread > 0 && !onNotifPage && (
                     <span style={{
                       position: "absolute", top: -5, right: -5,
                       background: "var(--pink-500)", color: "white",
@@ -122,7 +134,7 @@ export default function Sidebar({ onLogout, username, displayName, dark, onToggl
                       padding: "0 3px",
                       border: `2px solid ${sidebarBg}`,
                     }}>
-                      {unread > 9 ? "9+" : unread}
+                      {notifUnread > 9 ? "9+" : notifUnread}
                     </span>
                   )}
                   {isDM && dmUnread > 0 && location.pathname !== "/messages" && (
@@ -159,7 +171,7 @@ export default function Sidebar({ onLogout, username, displayName, dark, onToggl
         style={{
           display: "flex", alignItems: "center", gap: "9px",
           width: "100%", padding: "9px 11px", borderRadius: "11px",
-          border: `1.5px solid var(--border)`,
+          border: "1.5px solid var(--border)",
           background: dark ? "rgba(129,140,248,0.08)" : "var(--surface-2)",
           color: "var(--text-secondary)",
           fontSize: "13px", fontWeight: 600,
@@ -200,7 +212,7 @@ export default function Sidebar({ onLogout, username, displayName, dark, onToggl
       </button>
 
       {/* User footer */}
-      <div style={{ borderTop: `1px solid var(--border)`, paddingTop: "14px" }}>
+      <div style={{ borderTop: "1px solid var(--border)", paddingTop: "14px" }}>
         <div style={{
           display: "flex", alignItems: "center", gap: "9px",
           padding: "8px 10px", borderRadius: "11px",
@@ -219,7 +231,9 @@ export default function Sidebar({ onLogout, username, displayName, dark, onToggl
               fontSize: "13px", fontWeight: 700, color: "var(--text-primary)",
               margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
             }}>{displayName}</p>
-            <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>@{username}</p>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0 }}>
+              @{username}{isAdmin && <span style={{ marginLeft: 4, color: "var(--brand-500)", fontSize: "10px", fontWeight: 700 }}>ADMIN</span>}
+            </p>
           </div>
         </div>
         <button onClick={onLogout} style={{

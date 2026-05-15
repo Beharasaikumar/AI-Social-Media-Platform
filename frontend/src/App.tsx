@@ -12,6 +12,10 @@ import PostPage from "./pages/PostPage";
 import UserProfilePage from "./pages/UserProfilePage";
 import DMPage from "./pages/DMPage";
 import BookmarksPage from "./pages/BookmarksPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import PlacementsPage from "./pages/PlacementsPage";
+import AnnouncementsPage from "./pages/AnnouncementsPage";
+import MaterialsPage from "./pages/MaterialsPage";
 
 export default function App() {
   const { user, loading, login, logout, updateUser } = useAuth();
@@ -48,11 +52,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {!user && (
+        {!user ? (
           <Route path="*" element={<LoginPage onLogin={login} />} />
-        )}
-
-        {user && (
+        ) : user.isAdmin ? (
           <Route
             path="*"
             element={
@@ -64,16 +66,38 @@ export default function App() {
                 onToggleDark={toggleDark}
               >
                 <Routes>
-                  <Route path="/"              element={<FeedPage currentUserId={user.id} />} />
-                  <Route path="/explore"       element={<ExplorePage currentUserId={user.id} />} />
+                  <Route path="/" element={<AdminDashboard />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="*" element={<Navigate to="/admin" />} />
+                </Routes>
+              </MainLayout>
+            }
+          />
+        ) : (
+          <Route
+            path="*"
+            element={
+              <MainLayout
+                onLogout={logout}
+                username={user.username}
+                displayName={user.displayName}
+                dark={dark}
+                onToggleDark={toggleDark}
+              >
+                <Routes>
+                  <Route path="/" element={<FeedPage currentUserId={user.id} />} />
+                  <Route path="/explore" element={<ExplorePage currentUserId={user.id} />} />
+                  <Route path="/placements" element={<PlacementsPage />} />
+                  <Route path="/announcements" element={<AnnouncementsPage />} />
+                  <Route path="/materials" element={<MaterialsPage />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
-                  <Route path="/bookmarks"     element={<BookmarksPage />} />
-                  <Route path="/profile"       element={<ProfilePage user={user} onUserUpdate={updateUser} />} />
-                  <Route path="/post/:id"      element={<PostPage />} />
-                  <Route path="/user/:username"             element={<UserProfilePage />} />
-                  <Route path="/messages"                   element={<DMPage currentUserId={user.id} />} />
-                  <Route path="/messages/:conversationId"   element={<DMPage currentUserId={user.id} />} />
-                  <Route path="*"              element={<Navigate to="/" />} />
+                  <Route path="/bookmarks" element={<BookmarksPage />} />
+                  <Route path="/profile" element={<ProfilePage user={user} onUserUpdate={updateUser} />} />
+                  <Route path="/post/:id" element={<PostPage />} />
+                  <Route path="/user/:username" element={<UserProfilePage />} />
+                  <Route path="/messages" element={<DMPage currentUserId={user.id} />} />
+                  <Route path="/messages/:conversationId" element={<DMPage currentUserId={user.id} />} />
+                  <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
               </MainLayout>
             }

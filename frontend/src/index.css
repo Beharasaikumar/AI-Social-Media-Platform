@@ -42,10 +42,35 @@
   --shadow-card:  0 1px 4px rgba(0,0,0,0.06), 0 2px 8px rgba(99,102,241,0.04);
   --shadow-hover: 0 6px 24px rgba(99,102,241,0.13), 0 2px 8px rgba(0,0,0,0.06);
   --shadow-modal: 0 24px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.06);
+
+  /* Component-specific tokens for inline-style overrides */
+  --post-content-color: #1f2937;
+  --comment-content-color: #374151;
+  --post-bg-explicit: #ffffff;
+  --input-border-idle: #e2e8f0;
+  --input-bg-idle: #f8fafc;
+  --input-bg-focus: #ffffff;
+  --captcha-answer-bg: #f8fafc;
+  --user-card-bg: #ffffff;
+  --user-profile-bg: #ffffff;
+  --profile-banner: linear-gradient(135deg, #c7d2fe 0%, #e0e7ff 40%, #fce7f3 100%);
+  --stat-divider: #e4e6f0;
+  --otp-bg-empty: #0f172a;
+  --otp-bg-filled: #1e1b4b;
+  --login-card-bg: linear-gradient(to bottom, #1e293b, #0f172a);
+  --login-input-border: #e2e8f0;
+  --login-input-bg: #f8fafc;
+  --login-input-bg-focus: #ffffff;
+  --login-label-color: #64748b;
+  --login-text-color: #1e293b;
+  --captcha-refresh-border: #e2e8f0;
+  --captcha-refresh-bg: #f8fafc;
+  --captcha-refresh-color: #64748b;
+  --edit-modal-input-bg: var(--input-bg);
 }
 
 /* ╔══════════════════════════════════════════════════════════╗
-   ║  DARK MODE  — Rich midnight with clear visual hierarchy  ║
+   ║  DARK MODE                                               ║
    ╚══════════════════════════════════════════════════════════╝ */
 [data-theme="dark"] {
   --brand-50:  rgba(99,102,241,0.14);
@@ -59,27 +84,49 @@
   --pink-400:  #f472b6;
   --pink-500:  #ec4899;
 
-  /* Well-differentiated dark surfaces — each step clearly distinct */
-  --bg-page:    #0d0e17;   /* deepest page background */
-  --card-bg:    #13141f;   /* cards, panels, conversation list */
-  --surface-2:  #1a1b2e;   /* inputs, secondary surfaces */
-  --surface-3:  #21223a;   /* chips, hover targets, active states */
+  --bg-page:    #0d0e17;
+  --card-bg:    #13141f;
+  --surface-2:  #1a1b2e;
+  --surface-3:  #21223a;
   --input-bg:   #1a1b2e;
-  --sidebar-bg: #0f1020;   /* sidebar slightly distinct from page */
+  --sidebar-bg: #0f1020;
 
-  /* Crisp, visible borders with better contrast */
   --border:        #2a2c45;
   --border-strong: #5c5ff0;
 
-  /* Warm, easy-to-read text tones */
-  --text-primary:   #e8e9f8;  /* soft lavender-white, not harsh pure white */
-  --text-secondary: #9496b8;  /* clear secondary, not washed out */
-  --text-muted:     #525570;  /* muted but still readable */
+  --text-primary:   #e8e9f8;
+  --text-secondary: #9496b8;
+  --text-muted:     #525570;
 
   --shadow-sm:    0 1px 4px rgba(0,0,0,0.6);
   --shadow-card:  0 2px 8px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
   --shadow-hover: 0 8px 32px rgba(99,102,241,0.28), 0 2px 12px rgba(0,0,0,0.6);
   --shadow-modal: 0 24px 72px rgba(0,0,0,0.8), 0 4px 20px rgba(0,0,0,0.6);
+
+  /* Component-specific dark overrides */
+  --post-content-color: #d0d2e8;
+  --comment-content-color: #9496b8;
+  --post-bg-explicit: #13141f;
+  --input-border-idle: #2a2c45;
+  --input-bg-idle: #1a1b2e;
+  --input-bg-focus: #21223a;
+  --captcha-answer-bg: #1a1b2e;
+  --user-card-bg: #13141f;
+  --user-profile-bg: #13141f;
+  --profile-banner: linear-gradient(135deg, #1e1b4b 0%, #1a1b28 40%, #1f1028 100%);
+  --stat-divider: #2a2c45;
+  --otp-bg-empty: #0f172a;
+  --otp-bg-filled: #1e1b4b;
+  --login-card-bg: linear-gradient(to bottom, #1e293b, #0f172a);
+  --login-input-border: #2a2c45;
+  --login-input-bg: #1a1b2e;
+  --login-input-bg-focus: #21223a;
+  --login-label-color: #525570;
+  --login-text-color: #e8e9f8;
+  --captcha-refresh-border: #2a2c45;
+  --captcha-refresh-bg: #1a1b2e;
+  --captcha-refresh-color: #525570;
+  --edit-modal-input-bg: #1a1b2e;
 }
 
 /* ── Base ──────────────────────────────────────────────────────────────────── */
@@ -99,6 +146,7 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 [data-theme="dark"] ::-webkit-scrollbar-thumb { background: #252638; }
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: #3d4070; }
 
 /* ── Keyframes ─────────────────────────────────────────────────────────────── */
 @keyframes fadeUp {
@@ -219,56 +267,6 @@ body {
   animation: pulse-dot 2s ease-in-out infinite;
 }
 
-/* ── Dark-mode action pills (like, comment, repost…) ───────────────────────── */
-[data-theme="dark"] button {
-  color-scheme: dark;
-}
-
-/* Like button active state in dark */
-[data-theme="dark"] .liked-btn {
-  background: rgba(219,39,119,0.15) !important;
-  border-color: rgba(249,168,212,0.4) !important;
-  color: #f472b6 !important;
-}
-
-/* Repost active in dark */
-[data-theme="dark"] .reposted-btn {
-  background: rgba(5,150,105,0.12) !important;
-  border-color: rgba(110,231,183,0.3) !important;
-  color: #34d399 !important;
-}
-
-/* Bookmarked in dark */
-[data-theme="dark"] .bookmarked-btn {
-  color: #818cf8 !important;
-}
-
-/* ── Comment in dark ────────────────────────────────────────────────────────── */
-[data-theme="dark"] .comment-bubble {
-  background: var(--surface-2) !important;
-  border-color: var(--border) !important;
-}
-
-/* ── Quote card in dark ─────────────────────────────────────────────────────── */
-[data-theme="dark"] .quote-card {
-  background: var(--surface-2) !important;
-  border-color: var(--border) !important;
-}
-
-/* ── Dropdown + context menus in dark ──────────────────────────────────────── */
-[data-theme="dark"] .context-menu {
-  background: var(--surface-2) !important;
-  border-color: var(--border) !important;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.7) !important;
-}
-
-/* ── Reaction picker dark ───────────────────────────────────────────────────── */
-[data-theme="dark"] .reaction-picker {
-  background: var(--surface-2) !important;
-  border-color: var(--border) !important;
-  box-shadow: 0 12px 48px rgba(0,0,0,0.6) !important;
-}
-
 /* ── Modal overlay ──────────────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
@@ -286,14 +284,155 @@ body {
   background: rgba(0,0,0,0.72);
 }
 
-/* ── Input focus ring in dark ───────────────────────────────────────────────── */
-[data-theme="dark"] input:focus,
-[data-theme="dark"] textarea:focus {
-  border-color: var(--brand-400) !important;
-  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+/* ════════════════════════════════════════════════════════════
+   DARK MODE — Global override for hardcoded inline colors
+   These selectors target specific known patterns from inline styles
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Post content text (#1f2937 / #374151) ──────────────────────────────────── */
+[data-theme="dark"] .post-content,
+[data-theme="dark"] p[class*="post-text"] {
+  color: var(--text-primary) !important;
 }
 
-/* ── Sidebar nav dark tweaks ────────────────────────────────────────────────── */
+/* Any <p> that sits inside a card-bg div and uses hardcoded dark text */
+[data-theme="dark"] div[style*="background: \"white\""],
+[data-theme="dark"] div[style*='background: "white"'],
+[data-theme="dark"] div[style*="background: white"],
+[data-theme="dark"] div[style*="background:#fff"],
+[data-theme="dark"] div[style*="background: #fff"] {
+  background: var(--card-bg) !important;
+}
+
+/* ── Post/comment cards that use background:"white" ────────────────────────── */
+[data-theme="dark"] .post-card-root,
+[data-theme="dark"] .comment-section-root {
+  background: var(--card-bg) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── All inline-style inputs — override hardcoded light colors ──────────────── */
+[data-theme="dark"] input[style],
+[data-theme="dark"] textarea[style] {
+  background: var(--input-bg) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="dark"] input[style]:focus,
+[data-theme="dark"] textarea[style]:focus {
+  background: var(--surface-2) !important;
+  border-color: var(--brand-400) !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
+}
+
+/* ── AiToneHelper modal (hardcoded white bg) ─────────────────────────────────*/
+[data-theme="dark"] div[style*="background: white"],
+[data-theme="dark"] div[style*="background:white"] {
+  background: var(--card-bg) !important;
+}
+
+/* Text inside AiTone / Edit modal cards */
+[data-theme="dark"] p[style*="color: \"#1e293b\""],
+[data-theme="dark"] p[style*="color: #1e293b"],
+[data-theme="dark"] span[style*="color: #1e293b"] {
+  color: var(--text-primary) !important;
+}
+[data-theme="dark"] p[style*="color: \"#64748b\""],
+[data-theme="dark"] p[style*="color: #64748b"],
+[data-theme="dark"] span[style*="color: #64748b"] {
+  color: var(--text-muted) !important;
+}
+[data-theme="dark"] p[style*="color: \"#3730a3\""],
+[data-theme="dark"] p[style*="color: #3730a3"] {
+  color: #a5b4fc !important;
+}
+[data-theme="dark"] p[style*="color: \"#4338ca\""],
+[data-theme="dark"] p[style*="color: #4338ca"] {
+  color: #818cf8 !important;
+}
+
+/* ── PostPage — hardcoded white card backgrounds ────────────────────────────── */
+[data-theme="dark"] div[style*="background: \"white\""],
+[data-theme="dark"] div[style*='background: "white"'] {
+  background: var(--card-bg) !important;
+}
+
+/* Post detail page — post content color */
+[data-theme="dark"] p[style*="color: \"#1f2937\""],
+[data-theme="dark"] p[style*="color: #1f2937"] {
+  color: var(--text-primary) !important;
+}
+
+/* Comment content */
+[data-theme="dark"] p[style*="color: \"#374151\""],
+[data-theme="dark"] p[style*="color: #374151"] {
+  color: var(--text-secondary) !important;
+}
+
+/* ── UserProfilePage — hardcoded white ──────────────────────────────────────── */
+[data-theme="dark"] div[style*="background: \"white\""] {
+  background: var(--card-bg) !important;
+}
+
+/* Follow button in UserProfilePage when not following */
+[data-theme="dark"] button[style*="background: white"],
+[data-theme="dark"] button[style*='background: "white"'] {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* ── Surface bg overrides for various backgrounds ──────────────────────────── */
+[data-theme="dark"] div[style*="background: \"#f8f9ff\""],
+[data-theme="dark"] div[style*="background: #f8f9ff"] {
+  background: var(--surface-2) !important;
+}
+[data-theme="dark"] div[style*="background: \"#f1f5f9\""],
+[data-theme="dark"] div[style*="background: #f1f5f9"] {
+  background: var(--surface-2) !important;
+}
+
+/* ── Profile page stat dividers ─────────────────────────────────────────────── */
+[data-theme="dark"] div[style*="background: \"var(--border)\""] {
+  background: var(--border) !important;
+}
+
+/* ── Notification page — hardcoded bg colors ─────────────────────────────────*/
+[data-theme="dark"] div[style*="background: linear-gradient(135deg, var(--brand-50)"] {
+  background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(236,72,153,0.05)) !important;
+  border-color: rgba(99,102,241,0.25) !important;
+}
+
+/* ── Explore page mark highlight ─────────────────────────────────────────────*/
+[data-theme="dark"] mark {
+  background: rgba(99,102,241,0.3) !important;
+  color: #a5b4fc !important;
+  border-radius: 3px;
+}
+
+/* ── AI summary card in explore ──────────────────────────────────────────────*/
+[data-theme="dark"] div[style*="background: linear-gradient(135deg, #eef2ff"] {
+  background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(236,72,153,0.06)) !important;
+  border-color: rgba(99,102,241,0.3) !important;
+}
+[data-theme="dark"] p[style*="color: \"#4338ca\""] { color: #a5b4fc !important; }
+[data-theme="dark"] p[style*="color: \"#3730a3\""] { color: #818cf8 !important; }
+
+/* ── Context menus ───────────────────────────────────────────────────────────*/
+[data-theme="dark"] .context-menu {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.7) !important;
+}
+
+/* ── Reaction picker ─────────────────────────────────────────────────────────*/
+[data-theme="dark"] .reaction-picker {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.6) !important;
+}
+
+/* ── Sidebar nav ─────────────────────────────────────────────────────────────*/
 [data-theme="dark"] .sidebar-nav-active {
   background: rgba(129,140,248,0.14) !important;
   color: #a5b4fc !important;
@@ -302,92 +441,295 @@ body {
   background: rgba(255,255,255,0.05) !important;
 }
 
-/* ── Profile banner in dark ─────────────────────────────────────────────────── */
+/* ── Profile banner ──────────────────────────────────────────────────────────*/
 [data-theme="dark"] .profile-banner {
   background: linear-gradient(135deg, #1e1b4b 0%, #1a1b28 40%, #1f1028 100%) !important;
 }
 
-/* ── Explore AI summary in dark ─────────────────────────────────────────────── */
-[data-theme="dark"] .ai-summary-card {
-  background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(236,72,153,0.08)) !important;
-  border-color: rgba(99,102,241,0.35) !important;
+/* ── DM page ─────────────────────────────────────────────────────────────────*/
+[data-theme="dark"] button[style*="background: \"#eef2ff\""],
+[data-theme="dark"] button[style*="background: #eef2ff"] {
+  background: rgba(99,102,241,0.18) !important;
 }
 
-/* ── Trending topic # badge dark ────────────────────────────────────────────── */
-[data-theme="dark"] .trend-badge {
-  background: var(--surface-3) !important;
-  color: var(--brand-500) !important;
+/* ── Admin dashboard inputs ──────────────────────────────────────────────────*/
+[data-theme="dark"] input[placeholder],
+[data-theme="dark"] textarea[placeholder] {
+  background: var(--input-bg) !important;
+  color: var(--text-primary) !important;
   border-color: var(--border) !important;
 }
-
-/* ── DM message area dark ───────────────────────────────────────────────────── */
-[data-theme="dark"] .dm-area {
-  background: #0d0e17 !important;
+[data-theme="dark"] input[placeholder]::placeholder,
+[data-theme="dark"] textarea[placeholder]::placeholder {
+  color: var(--text-muted) !important;
 }
 
-/* ── DM bubble — outgoing in dark ───────────────────────────────────────────── */
-[data-theme="dark"] .bubble-out {
-  background: linear-gradient(135deg, #4f46e5, #5a5cf8) !important;
-}
-
-/* ── Incoming bubble in dark mode — distinguish from background ──────────────── */
-[data-theme="dark"] .bubble-in {
-  background: var(--surface-2) !important;
+/* ── File input in dark ──────────────────────────────────────────────────────*/
+[data-theme="dark"] input[type="file"] {
+  background: var(--input-bg) !important;
+  color: var(--text-secondary) !important;
   border-color: var(--border) !important;
+}
+[data-theme="dark"] input[type="datetime-local"] {
+  background: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+  color-scheme: dark;
+}
+
+/* ── Number input (captcha) ──────────────────────────────────────────────────*/
+[data-theme="dark"] input[type="number"] {
+  background: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+input[type="number"] { -moz-appearance: textfield; }
+
+/* ── AiToneHelper — white modal background ───────────────────────────────────*/
+[data-theme="dark"] .ai-modal-bg {
+  background: var(--card-bg) !important;
+}
+[data-theme="dark"] div[style*="background: white"] {
+  background: var(--card-bg) !important;
   color: var(--text-primary) !important;
 }
 
-/* ── Tab pills (explore, profile) ───────────────────────────────────────────── */
-[data-theme="dark"] .tab-pill-container {
+/* AiTone: "your draft" div */
+[data-theme="dark"] div[style*="background: \"var(--surface-2)\""] {
   background: var(--surface-2) !important;
-  border-color: var(--border) !important;
-}
-[data-theme="dark"] .tab-pill-active {
-  background: var(--surface-3) !important;
-  color: #a5b4fc !important;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.5), 0 0 0 1px rgba(99,102,241,0.2) !important;
 }
 
-/* ── Notification items dark ────────────────────────────────────────────────── */
+/* AiTone: result area */
+[data-theme="dark"] div[style*="background: \"var(--surface-3)\""] {
+  background: var(--surface-3) !important;
+}
+
+/* ── Bookmarks page ──────────────────────────────────────────────────────────*/
+[data-theme="dark"] div[style*="background: \"var(--card-bg)\""] {
+  background: var(--card-bg) !important;
+}
+
+/* ── Edit profile modal inputs ───────────────────────────────────────────────*/
+[data-theme="dark"] input[style*="background: #fff5f5"],
+[data-theme="dark"] input[style*="background: \"#fff5f5\""] {
+  background: rgba(239,68,68,0.1) !important;
+}
+
+/* ── ConversationList in DM: active conversation button ──────────────────────*/
+[data-theme="dark"] button[style*="background: #eef2ff"] {
+  background: rgba(99,102,241,0.18) !important;
+  border-left-color: #818cf8 !important;
+}
+
+/* ── Notification unread items ───────────────────────────────────────────────*/
+.notif-unread {
+  background: linear-gradient(135deg, var(--brand-50) 0%, rgba(253,242,248,0.2) 100%);
+  border-color: var(--brand-200) !important;
+}
 [data-theme="dark"] .notif-unread {
   background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(236,72,153,0.05)) !important;
   border-color: rgba(99,102,241,0.3) !important;
 }
 
-/* ── Left panel (login page) ────────────────────────────────────────────────── */
-@media (min-width: 768px) {
-  .left-panel { display: flex !important; }
-}
-/* ── Dark mode enhancements ──────────────────────────────────────────────────── */
-
-/* Active conversation item in dark mode */
-[data-theme="dark"] button[style*="eef2ff"] {
-  background: rgba(99,102,241,0.18) !important;
-  border-left-color: #818cf8 !important;
-}
-
-/* Highlight search term in dark mode */
-[data-theme="dark"] mark {
-  background: rgba(99,102,241,0.3) !important;
+/* ── Sidebar nav tab pills ───────────────────────────────────────────────────*/
+[data-theme="dark"] .tab-pill-active {
+  background: var(--surface-3) !important;
   color: #a5b4fc !important;
 }
 
-/* Input placeholder dark mode */
+/* ── PostPage & UserProfile: background: white → card-bg ─────────────────────*/
+[data-theme="dark"] div[style*="border-radius: \"18px\""][style*="border"],
+[data-theme="dark"] div[style*="border-radius: \"20px\""][style*="border"] {
+  background: var(--card-bg);
+}
+
+/* ── Materials / Announcements / Placements icon backgrounds ────────────────*/
+[data-theme="dark"] div[style*="background: \"#fecaca\""],
+[data-theme="dark"] div[style*="background: #fecaca"] {
+  background: rgba(220,38,38,0.18) !important;
+}
+[data-theme="dark"] div[style*="background: \"#bfdbfe\""],
+[data-theme="dark"] div[style*="background: #bfdbfe"] {
+  background: rgba(37,99,235,0.18) !important;
+}
+[data-theme="dark"] div[style*="background: \"#fef3c7\""],
+[data-theme="dark"] div[style*="background: #fef3c7"] {
+  background: rgba(217,119,6,0.18) !important;
+}
+[data-theme="dark"] div[style*="background: \"#d1fae5\""],
+[data-theme="dark"] div[style*="background: #d1fae5"] {
+  background: rgba(5,150,105,0.18) !important;
+}
+[data-theme="dark"] div[style*="background: \"linear-gradient(135deg, #c7d2fe, #e0e7ff)\""],
+[data-theme="dark"] div[style*="background: linear-gradient(135deg, #c7d2fe, #e0e7ff)"] {
+  background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(129,140,248,0.1)) !important;
+}
+[data-theme="dark"] div[style*="background: \"linear-gradient(135deg, #fef3c7, #fde68a)\""],
+[data-theme="dark"] div[style*="background: linear-gradient(135deg, #fef3c7, #fde68a)"] {
+  background: rgba(217,119,6,0.2) !important;
+}
+
+/* Download button accent colors in materials */
+[data-theme="dark"] a[style*="background: rgba(220,38,38,0.1)"] {
+  background: rgba(220,38,38,0.18) !important;
+}
+[data-theme="dark"] a[style*="background: rgba(37,99,235,0.1)"] {
+  background: rgba(37,99,235,0.18) !important;
+}
+
+/* ── Profile hero avatar gradient ────────────────────────────────────────────*/
+[data-theme="dark"] div[style*="background: \"linear-gradient(135deg, #c7d2fe 0%, #e0e7ff 40%, #fce7f3 100%)\""],
+[data-theme="dark"] div[style*="background: linear-gradient(135deg, #c7d2fe 0%, #e0e7ff 40%, #fce7f3 100%)"] {
+  background: linear-gradient(135deg, #1e1b4b 0%, #1a1b28 40%, #1f1028 100%) !important;
+}
+
+/* UserProfilePage banner */
+[data-theme="dark"] div[style*="background: linear-gradient(135deg, #c7d2fe 0%, #e0e7ff 40%, #fce7f3 100%)"] {
+  background: linear-gradient(135deg, #1e1b4b 0%, #1a1b28 40%, #1f1028 100%) !important;
+}
+
+/* ── Explore sidebar right panels ────────────────────────────────────────────*/
+[data-theme="dark"] div[style*="background: \"linear-gradient(135deg, #fef3c7, #fbbf2430)\""],
+[data-theme="dark"] div[style*="background: linear-gradient(135deg, #fef3c7, #fbbf2430)"] {
+  background: rgba(217,119,6,0.15) !important;
+}
+[data-theme="dark"] div[style*="background: \"linear-gradient(135deg, #dbeafe, #2563eb20)\""],
+[data-theme="dark"] div[style*="background: linear-gradient(135deg, #dbeafe, #2563eb20)"] {
+  background: rgba(37,99,235,0.12) !important;
+}
+
+/* ── Trending rank badges ─────────────────────────────────────────────────────*/
+[data-theme="dark"] span[style*="background: \"#fef3c7\""],
+[data-theme="dark"] span[style*="background: #fef3c7"] {
+  background: rgba(217,119,6,0.2) !important;
+  color: #fbbf24 !important;
+}
+[data-theme="dark"] span[style*="background: \"#fee2e2\""],
+[data-theme="dark"] span[style*="background: #fee2e2"] {
+  background: rgba(220,38,38,0.2) !important;
+  color: #f87171 !important;
+}
+
+/* ── DM surface-2 message area ───────────────────────────────────────────────*/
+[data-theme="dark"] div[style*="background: \"var(--surface-2)\""][style*="flex: 1"] {
+  background: var(--bg-page) !important;
+}
+
+/* ── Stat box dividers in profile pages ──────────────────────────────────────*/
+[data-theme="dark"] div[style*="width: 1"][style*="background: var(--border)"] {
+  background: var(--border) !important;
+}
+
+/* ── Heart button liked state dark ──────────────────────────────────────────*/
+[data-theme="dark"] button[style*="background: \"rgba(219,39,119,0.08)\""],
+[data-theme="dark"] button[style*="background: rgba(219,39,119,0.08)"],
+[data-theme="dark"] button[style*="background: \"#fdf2f8\""],
+[data-theme="dark"] button[style*="background: #fdf2f8"] {
+  background: rgba(219,39,119,0.15) !important;
+  border-color: rgba(249,168,212,0.4) !important;
+  color: #f472b6 !important;
+}
+
+/* ── Repost active dark ──────────────────────────────────────────────────────*/
+[data-theme="dark"] button[style*="background: rgba(5,150,105,0.08)"] {
+  background: rgba(5,150,105,0.15) !important;
+}
+
+/* ── Reaction bubbles dark ───────────────────────────────────────────────────*/
+[data-theme="dark"] button[style*="background: \"var(--brand-50)\""] {
+  background: var(--brand-50) !important;
+  border-color: var(--brand-300) !important;
+  color: var(--brand-600) !important;
+}
+
+/* ── PostPage like button active dark ────────────────────────────────────────*/
+[data-theme="dark"] button[style*="background: \"#fdf2f8\""] {
+  background: rgba(219,39,119,0.14) !important;
+  border-color: rgba(249,168,212,0.4) !important;
+  color: #f472b6 !important;
+}
+
+/* ── Reposted by banner strip dark ──────────────────────────────────────────*/
+[data-theme="dark"] div[style*="background: \"var(--surface-2)\""][style*="border-bottom"] {
+  background: var(--surface-2) !important;
+}
+
+/* ── Quote post card in feed dark ────────────────────────────────────────────*/
+[data-theme="dark"] div[style*="background: \"var(--surface-2)\""][style*="border-radius: \"13px\""] {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── Bookmarks post action bar ───────────────────────────────────────────────*/
+[data-theme="dark"] div[style*="padding: \"12px 20px\""][style*="border-top"] {
+  border-color: var(--border) !important;
+}
+
+/* ── Input placeholder dark mode ─────────────────────────────────────────────*/
 [data-theme="dark"] input::placeholder,
 [data-theme="dark"] textarea::placeholder {
   color: var(--text-muted);
   opacity: 1;
 }
 
-/* Scrollbar dark refinement */
-[data-theme="dark"] ::-webkit-scrollbar-thumb {
-  background: #2e3050;
-}
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-  background: #3d4070;
+/* ── Inline admin form fields (AdminDashboard) ───────────────────────────────*/
+[data-theme="dark"] input[style*="padding: \"8px\""],
+[data-theme="dark"] textarea[style*="padding: \"8px\""] {
+  background: var(--input-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border) !important;
 }
 
-/* Post content color override in dark */
-[data-theme="dark"] p[style*="color: \"#374151\""] {
+/* ── Admin add-form cards ────────────────────────────────────────────────────*/
+[data-theme="dark"] div[style*="background: \"var(--card-bg)\""][style*="gap: \"12px\""] {
+  background: var(--card-bg) !important;
+}
+
+/* ── Date input color scheme ─────────────────────────────────────────────────*/
+[data-theme="dark"] input[type="datetime-local"],
+[data-theme="dark"] input[type="date"] {
+  color-scheme: dark;
+  background: var(--input-bg) !important;
   color: var(--text-primary) !important;
+}
+
+/* ── Login page FormInput — light hardcoded values ───────────────────────────*/
+/* The login page is intentionally dark so we leave its own gradient bg alone.
+   Only override the card inputs if somehow rendered with the page theme. */
+
+/* ── Error/success banners in admin ──────────────────────────────────────────*/
+[data-theme="dark"] div[style*="background: rgba(239,68,68,0.1)"] {
+  background: rgba(239,68,68,0.15) !important;
+}
+[data-theme="dark"] div[style*="background: rgba(34,197,94,0.1)"] {
+  background: rgba(34,197,94,0.12) !important;
+}
+
+/* ── Explore people section hover ────────────────────────────────────────────*/
+[data-theme="dark"] div[style*="cursor: \"default\""][style*="borderRadius: \"10px\""] {
+  transition: background 0.15s;
+}
+
+/* ── UserProfilePage post cards (var(--surface-2) bg) ────────────────────────*/
+[data-theme="dark"] div[style*="background: \"var(--surface-2)\""][style*="border-radius: \"14px\""] {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── Ensure all card text stays readable in dark ─────────────────────────────*/
+[data-theme="dark"] p, [data-theme="dark"] span, [data-theme="dark"] label {
+  color: inherit;
+}
+
+/* ── DM convo list search input ──────────────────────────────────────────────*/
+[data-theme="dark"] input[style*="background: \"var(--surface-2)\""] {
+  background: var(--surface-2) !important;
+  border-color: var(--border) !important;
+  color: var(--text-primary) !important;
+}
+
+@media (min-width: 768px) {
+  .left-panel { display: flex !important; }
 }
