@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 
 export interface AuthRequest extends Request {
   userId?: string;
+  isAdmin?: boolean;
 }
 
 export function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
@@ -12,8 +13,9 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
   }
   const token = header.split(" ")[1];
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+    const payload = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string, isAdmin?: boolean };
     req.userId = payload.userId;
+    req.isAdmin = payload.isAdmin;
     next();
   } catch {
     return res.status(401).json({ message: "Invalid token" });

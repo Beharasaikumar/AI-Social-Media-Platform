@@ -54,25 +54,6 @@ export default function App() {
       <Routes>
         {!user ? (
           <Route path="*" element={<LoginPage onLogin={login} />} />
-        ) : user.isAdmin ? (
-          <Route
-            path="*"
-            element={
-              <MainLayout
-                onLogout={logout}
-                username={user.username}
-                displayName={user.displayName}
-                dark={dark}
-                onToggleDark={toggleDark}
-              >
-                <Routes>
-                  <Route path="/" element={<AdminDashboard />} />
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="*" element={<Navigate to="/admin" />} />
-                </Routes>
-              </MainLayout>
-            }
-          />
         ) : (
           <Route
             path="*"
@@ -83,6 +64,7 @@ export default function App() {
                 displayName={user.displayName}
                 dark={dark}
                 onToggleDark={toggleDark}
+                isAdmin={user.isAdmin}
               >
                 <Routes>
                   <Route path="/" element={<FeedPage currentUserId={user.id} />} />
@@ -97,6 +79,9 @@ export default function App() {
                   <Route path="/user/:username" element={<UserProfilePage />} />
                   <Route path="/messages" element={<DMPage currentUserId={user.id} />} />
                   <Route path="/messages/:conversationId" element={<DMPage currentUserId={user.id} />} />
+                  
+                  {user.isAdmin && <Route path="/admin" element={<AdminDashboard />} />}
+                  
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
               </MainLayout>

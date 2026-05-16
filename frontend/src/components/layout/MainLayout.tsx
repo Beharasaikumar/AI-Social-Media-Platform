@@ -8,10 +8,11 @@ interface MainLayoutProps {
   displayName: string;
   dark: boolean;
   onToggleDark: () => void;
+  isAdmin?: boolean;
 }
 
 export default function MainLayout({
-  children, onLogout, username, displayName, dark, onToggleDark,
+  children, onLogout, username, displayName, dark, onToggleDark, isAdmin
 }: MainLayoutProps) {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-page)", transition: "background 0.3s" }}>
@@ -21,6 +22,7 @@ export default function MainLayout({
         displayName={displayName}
         dark={dark}
         onToggleDark={onToggleDark}
+        isAdmin={isAdmin}
       />
       <main style={{ marginLeft: "var(--sidebar-w)", minHeight: "100vh" }}>
         <div style={{ maxWidth: "780px", margin: "0 auto", padding: "32px 24px" }}>

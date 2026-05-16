@@ -1,143 +1,214 @@
+-- ═══════════════════════════════════════════════════════════════════════════
+-- CampusConnect — Unified Schema
+-- Run once against a fresh database (or use IF NOT EXISTS / IF NOT EXISTS).
+-- ═══════════════════════════════════════════════════════════════════════════
+
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- ─────────────────────────────────────────────────────────────────────
--- Core Tables
--- ─────────────────────────────────────────────────────────────────────
-
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  username VARCHAR(50) UNIQUE NOT NULL,
-  display_name VARCHAR(100) NOT NULL,
-  bio TEXT,
-  avatar_url TEXT,
-  password_hash TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Users
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS users (
+  id            UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  username      VARCHAR(50) UNIQUE NOT NULL,
+  display_name  VARCHAR(100) NOT NULL,
+  email         VARCHAR(255) UNIQUE,          -- nullable until verified
+  bio           TEXT,
+  avatar_url    TEXT,
+  password_hash TEXT        NOT NULL,
+  is_verified   BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE password_reset_tokens (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token VARCHAR(255) UNIQUE NOT NULL,
+-- ─────────────────────────────────────────────────────────────────────────────
+-- OTP verifications
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS otp_verifications (
+  id         UUID       PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id    UUID       NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  otp        VARCHAR(4) NOT NULL,
+  purpose    VARCHAR(10) NOT NULL CHECK (purpose IN ('register', 'login', 'forgot')),
   expires_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  used       BOOLEAN    NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user ON password_reset_tokens(user_id);
-CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token ON password_reset_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_otp_user    ON otp_verifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_otp_expires ON otp_verifications(expires_at);
 
-CREATE TABLE posts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  content TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  media_url TEXT,
-  media_type VARCHAR(10),
-  repost_of_id UUID REFERENCES posts(id) ON DELETE CASCADE
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Password reset tokens
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+  id         UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token      VARCHAR(255) UNIQUE NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE comments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  content TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+CREATE INDEX IF NOT EXISTS idx_prt_user  ON password_reset_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_prt_token ON password_reset_tokens(token);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Posts
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS posts (
+  id           UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id      UUID        REFERENCES users(id) ON DELETE CASCADE,
+  content      TEXT,
+  media_url    TEXT,
+  media_type   VARCHAR(10),
+  repost_of_id UUID        REFERENCES posts(id) ON DELETE CASCADE,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE likes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(post_id, user_id)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Comments
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS comments (
+  id         UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  post_id    UUID        REFERENCES posts(id) ON DELETE CASCADE,
+  user_id    UUID        REFERENCES users(id) ON DELETE CASCADE,
+  content    TEXT        NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE TABLE follows (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  follower_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  following_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(follower_id, following_id)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Likes
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS likes (
+  id         UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  post_id    UUID        REFERENCES posts(id) ON DELETE CASCADE,
+  user_id    UUID        REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (post_id, user_id)
 );
 
-CREATE TABLE notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  actor_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  type VARCHAR(20) NOT NULL,
-  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-  read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Follows
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS follows (
+  id           UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  follower_id  UUID        REFERENCES users(id) ON DELETE CASCADE,
+  following_id UUID        REFERENCES users(id) ON DELETE CASCADE,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (follower_id, following_id)
 );
 
--- ─────────────────────────────────────────────────────────────────────
--- Direct Messages
--- ─────────────────────────────────────────────────────────────────────
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Notifications
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS notifications (
+  id         UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id    UUID        REFERENCES users(id) ON DELETE CASCADE,
+  actor_id   UUID        REFERENCES users(id) ON DELETE CASCADE,
+  type       VARCHAR(20) NOT NULL,
+  post_id    UUID        REFERENCES posts(id) ON DELETE CASCADE,
+  read       BOOLEAN     NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Direct messages
+-- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS conversations (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user1_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  user2_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  id         UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user1_id   UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user2_id   UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT unique_pair CHECK (user1_id < user2_id),
   UNIQUE (user1_id, user2_id)
 );
 
 CREATE TABLE IF NOT EXISTS messages (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
-  sender_id       UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  content         TEXT NOT NULL CHECK (char_length(content) > 0),
-  read            BOOLEAN NOT NULL DEFAULT FALSE,
+  id              UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  conversation_id UUID        NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+  sender_id       UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content         TEXT        NOT NULL CHECK (char_length(content) > 0),
+  read            BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────────────────────────────
--- Enhanced Features (Reactions, Reposts, Bookmarks, Mentions)
--- ─────────────────────────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_conv_user1    ON conversations(user1_id);
+CREATE INDEX IF NOT EXISTS idx_conv_user2    ON conversations(user2_id);
+CREATE INDEX IF NOT EXISTS idx_msg_conv      ON messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_msg_conv_time ON messages(conversation_id, created_at);
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Reactions, reposts, bookmarks, mentions
+-- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS reactions (
-  id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_id  UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-  user_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  emoji    VARCHAR(10) NOT NULL DEFAULT '❤️',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(post_id, user_id)
+  id         UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  post_id    UUID        NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  emoji      VARCHAR(10) NOT NULL DEFAULT '❤️',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (post_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS reposts (
-  id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_id  UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-  user_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(post_id, user_id)
+  id         UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  post_id    UUID        NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (post_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS bookmarks (
-  id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_id  UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-  user_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(post_id, user_id)
+  id         UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  post_id    UUID        NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (post_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS mentions (
-  id       UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_id  UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-  user_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  id         UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  post_id    UUID        NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────────────────────────────
--- Indexes for Performance
--- ─────────────────────────────────────────────────────────────────────
+CREATE INDEX IF NOT EXISTS idx_reactions_post  ON reactions(post_id);
+CREATE INDEX IF NOT EXISTS idx_reposts_post    ON reposts(post_id);
+CREATE INDEX IF NOT EXISTS idx_bookmarks_user  ON bookmarks(user_id);
+CREATE INDEX IF NOT EXISTS idx_mentions_user   ON mentions(user_id);
 
-CREATE INDEX IF NOT EXISTS idx_conversations_user1 ON conversations(user1_id);
-CREATE INDEX IF NOT EXISTS idx_conversations_user2 ON conversations(user2_id);
-CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
-CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(conversation_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_reactions_post ON reactions(post_id);
-CREATE INDEX IF NOT EXISTS idx_reposts_post ON reposts(post_id);
-CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id);
-CREATE INDEX IF NOT EXISTS idx_mentions_user ON mentions(user_id);
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Admin — Placements, Announcements, Materials
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS placements (
+  id          UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  type        VARCHAR(20) NOT NULL CHECK (type IN ('job', 'internship', 'recruitment')),
+  company     VARCHAR(255) NOT NULL,
+  title       VARCHAR(255) NOT NULL,
+  description TEXT,
+  salary      VARCHAR(100),
+  deadline    TIMESTAMPTZ,
+  link        TEXT,
+  created_by  UUID        REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS announcements (
+  id         UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title      VARCHAR(255) NOT NULL,
+  content    TEXT        NOT NULL,
+  posted_by  UUID        REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS materials (
+  id          UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+  title       VARCHAR(255) NOT NULL,
+  description TEXT,
+  file_url    TEXT        NOT NULL,
+  file_type   VARCHAR(10) NOT NULL,
+  uploaded_by UUID        REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

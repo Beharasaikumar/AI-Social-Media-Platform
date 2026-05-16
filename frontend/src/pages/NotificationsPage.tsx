@@ -52,7 +52,7 @@ export default function NotificationsPage() {
 
   const handleClick = async (n: Notification) => {
     setNotifications(prev => prev.map(notif => notif.id === n.id ? { ...notif, read: true } : notif));
-    try { await markOneRead(n.id); } catch { }
+    try { await markOneRead(n.id); } catch { /* ignore error */ }
     if ((n.type === "LIKE" || n.type === "COMMENT" || n.type === "MENTION") && n.postId) {
       navigate(`/post/${n.postId}`);
     } else if (n.type === "FOLLOW") {
