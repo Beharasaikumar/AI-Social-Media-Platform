@@ -1,3 +1,4 @@
+// src/pages/FeedPage.tsx
 import { useState, useRef, useEffect, useCallback } from "react";
 import {
   Sparkles, Heart, MessageCircle, Loader2, Send, Image, Video, X,
@@ -10,6 +11,7 @@ import {
   editPost, deletePost, repostPost, bookmarkPost, reactToPost,
 } from "../api/posts";
 import AiToneHelper from "../components/AiToneHelper";
+import DeleteConfirmModal from "../components/DeleteConfirmModal";
 
 const REACTIONS = ["❤️", "😂", "😮", "😢", "🔥", "👏"];
 
@@ -152,38 +154,6 @@ function EditPostModal({ post, onSave, onClose }: { post: Post; onSave: (p: Post
   );
 }
 
-/* ── Action pill ─────────────────────────────────────────────────────────────── */
-function ActionPill({
-  children, active, activeStyle, onClick, disabled, className,
-}: {
-  children: React.ReactNode;
-  active?: boolean;
-  activeStyle?: React.CSSProperties;
-  onClick?: () => void;
-  disabled?: boolean;
-  className?: string;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={className}
-      style={{
-        display: "inline-flex", alignItems: "center", gap: "5px",
-        padding: "5px 11px", borderRadius: "99px",
-        border: `1.5px solid ${active ? (activeStyle?.borderColor ?? "var(--border)") : "var(--border)"}`,
-        background: active ? (activeStyle?.background ?? "var(--surface-2)") : "var(--surface-2)",
-        color: active ? (activeStyle?.color ?? "var(--text-muted)") : "var(--text-muted)",
-        fontSize: "12px", fontWeight: 600, cursor: disabled ? "default" : "pointer",
-        fontFamily: "inherit", transition: "all 0.15s",
-        ...(active ? activeStyle : {}),
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
 /* ── Post card ───────────────────────────────────────────────────────────────── */
 interface PostCardProps {
   post: Post; currentUserId: string;
@@ -200,12 +170,14 @@ function PostCard({
   expanded, onToggleComments, comments, commentInput,
   onCommentChange, onCommentSubmit, submitting,
 }: PostCardProps) {
-  const [showMenu, setShowMenu] = useState(false);
+  const [showMenu, setShowMenu]           = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [liking, setLiking] = useState(false);
-  const [reposting, setReposting] = useState(false);
-  const [bookmarking, setBookmarking] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);  // ← NEW
+  const [deleting, setDeleting]           = useState(false);       // ← NEW
+  const [liking, setLiking]               = useState(false);
+  const [reposting, setReposting]         = useState(false);
+  const [bookmarking, setBookmarking]     = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const isOwner = post.author.id === currentUserId;
   const isPureRepost = !post.content && !post.mediaUrl && !!post.repostOf;
@@ -259,21 +231,40 @@ function PostCard({
     finally { setBookmarking(false); }
   };
 
-  const handleDelete = async () => {
-    if (!confirm("Delete this post?")) return;
-    setShowMenu(false);
-    await deletePost(post.id);
-    onDelete(post.id);
+  // ── Delete with modal ──────────────────────────────────────────────────────
+  const handleDeleteConfirm = async () => {
+    setDeleting(true);
+    try {
+      await deletePost(post.id);
+      onDelete(post.id);
+      setShowDeleteModal(false);
+    } finally {
+      setDeleting(false);
+    }
   };
 
-  // Display author (for pure reposts, show origin author)
   const displayAuthor = isPureRepost && post.repostOf?.author ? post.repostOf.author : post.author;
   const displayContent = isPureRepost ? post.repostOf?.content : post.content;
-  const displayMedia = isPureRepost ? { url: post.repostOf?.mediaUrl, type: post.repostOf?.mediaType } : { url: post.mediaUrl, type: post.mediaType };
+  const displayMedia = isPureRepost
+    ? { url: post.repostOf?.mediaUrl, type: post.repostOf?.mediaType }
+    : { url: post.mediaUrl, type: post.mediaType };
 
   return (
     <>
       {showEditModal && <EditPostModal post={post} onSave={onUpdate} onClose={() => setShowEditModal(false)} />}
+
+      {/* ── Delete confirmation modal ────────────────────────────────────── */}
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          title="Delete this post?"
+          message="This post will be permanently removed. Likes, comments and reposts will also be deleted."
+          confirmLabel="Delete post"
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setShowDeleteModal(false)}
+          loading={deleting}
+        />
+      )}
+
       <div style={{
         background: "var(--card-bg)", borderRadius: "18px",
         border: "1.5px solid var(--border)",
@@ -283,40 +274,24 @@ function PostCard({
         onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--shadow-hover)"; }}
         onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "var(--shadow-card)"; }}
       >
-        {/* Repost banner */}
         {isPureRepost && (
-          <div style={{
-            padding: "6px 18px", display: "flex", alignItems: "center", gap: "6px",
-            background: "var(--surface-2)", borderBottom: "1px solid var(--border)",
-          }}>
+          <div style={{ padding: "6px 18px", display: "flex", alignItems: "center", gap: "6px", background: "var(--surface-2)", borderBottom: "1px solid var(--border)" }}>
             <Repeat2 size={12} style={{ color: "var(--text-muted)" }} />
-            <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>
-              {post.author.displayName} reposted
-            </span>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>{post.author.displayName} reposted</span>
           </div>
         )}
 
-        {/* Header */}
         <div style={{ padding: "16px 18px 0" }}>
           <div style={{ display: "flex", gap: "11px" }}>
             <UserAvatar name={displayAuthor.displayName} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap" }}>
-                <span style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)" }}>
-                  {displayAuthor.displayName}
-                </span>
-                <span style={{
-                  fontSize: "11px", color: "var(--text-muted)",
-                  background: "var(--surface-2)", padding: "1px 8px",
-                  borderRadius: "99px", border: "1px solid var(--border)",
-                }}>@{displayAuthor.username}</span>
+                <span style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)" }}>{displayAuthor.displayName}</span>
+                <span style={{ fontSize: "11px", color: "var(--text-muted)", background: "var(--surface-2)", padding: "1px 8px", borderRadius: "99px", border: "1px solid var(--border)" }}>@{displayAuthor.username}</span>
                 <span style={{ fontSize: "11px", color: "var(--text-muted)", marginLeft: "auto" }}>
                   {formatDate(post.createdAt)}
-                  {post.updatedAt && post.updatedAt !== post.createdAt && (
-                    <span style={{ marginLeft: 4, fontStyle: "italic", opacity: 0.7 }}>(edited)</span>
-                  )}
+                  {post.updatedAt && post.updatedAt !== post.createdAt && <span style={{ marginLeft: 4, fontStyle: "italic", opacity: 0.7 }}>(edited)</span>}
                 </span>
-                {/* Options */}
                 {isOwner && !isPureRepost && (
                   <div style={{ position: "relative" }} ref={menuRef}>
                     <button onClick={() => setShowMenu(v => !v)} style={{
@@ -337,8 +312,14 @@ function PostCard({
                         boxShadow: "var(--shadow-modal)", zIndex: 50, minWidth: "145px",
                       }}>
                         {[
-                          { icon: Pencil, label: "Edit", color: "var(--text-secondary)", hoverBg: "var(--surface-2)", onClick: () => { setShowMenu(false); setShowEditModal(true); } },
-                          { icon: Trash2, label: "Delete", color: "#e11d48", hoverBg: "rgba(225,29,72,0.06)", onClick: handleDelete },
+                          {
+                            icon: Pencil, label: "Edit", color: "var(--text-secondary)", hoverBg: "var(--surface-2)",
+                            onClick: () => { setShowMenu(false); setShowEditModal(true); },
+                          },
+                          {
+                            icon: Trash2, label: "Delete", color: "#e11d48", hoverBg: "rgba(225,29,72,0.06)",
+                            onClick: () => { setShowMenu(false); setShowDeleteModal(true); }, // ← modal
+                          },
                         ].map(({ icon: Icon, label, color, hoverBg, onClick }) => (
                           <button key={label} onClick={onClick} style={{
                             width: "100%", padding: "10px 14px", border: "none", background: "none",
@@ -358,7 +339,6 @@ function PostCard({
                 )}
               </div>
 
-              {/* Content */}
               {displayContent && (
                 <MentionText text={displayContent} style={{
                   fontSize: "14px", lineHeight: 1.75,
@@ -369,7 +349,6 @@ function PostCard({
           </div>
         </div>
 
-        {/* Media */}
         {displayMedia.url && (
           <div style={{ margin: "14px 0 0", borderTop: "1px solid var(--border)" }}>
             {displayMedia.type === "video"
@@ -379,31 +358,20 @@ function PostCard({
           </div>
         )}
 
-        {/* Quoted repost (post WITH its own content quoting another) */}
         {!isPureRepost && post.repostOf && (
           <div style={{ margin: "12px 18px 0" }}>
-            <div style={{
-              border: "1.5px solid var(--border)", borderRadius: "13px",
-              overflow: "hidden", background: "var(--surface-2)",
-            }}>
+            <div style={{ border: "1.5px solid var(--border)", borderRadius: "13px", overflow: "hidden", background: "var(--surface-2)" }}>
               <div style={{ padding: "11px 14px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "5px" }}>
-                  <span style={{ fontWeight: 700, fontSize: "12px", color: "var(--text-primary)" }}>
-                    {post.repostOf.author?.displayName}
-                  </span>
+                  <span style={{ fontWeight: 700, fontSize: "12px", color: "var(--text-primary)" }}>{post.repostOf.author?.displayName}</span>
                   <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>@{post.repostOf.author?.username}</span>
                 </div>
-                {post.repostOf.content && (
-                  <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.6 }}>
-                    {post.repostOf.content}
-                  </p>
-                )}
+                {post.repostOf.content && <p style={{ fontSize: "13px", color: "var(--text-secondary)", margin: 0, lineHeight: 1.6 }}>{post.repostOf.content}</p>}
               </div>
             </div>
           </div>
         )}
 
-        {/* Reaction bubbles */}
         {post.reactions && post.reactions.length > 0 && (
           <div style={{ padding: "8px 18px 0", display: "flex", gap: "5px", flexWrap: "wrap" }}>
             {post.reactions.map(rx => (
@@ -422,24 +390,19 @@ function PostCard({
           </div>
         )}
 
-        {/* Action bar */}
         <div style={{ padding: "10px 18px 14px" }}>
           <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
-
-            {/* Like */}
             <button className="heart-pop" onClick={handleLike} disabled={liking} style={{
               display: "inline-flex", alignItems: "center", gap: "5px",
               padding: "5px 11px", borderRadius: "99px",
               border: `1.5px solid ${post.likedByMe ? "#f9a8d4" : "var(--border)"}`,
               background: post.likedByMe ? "rgba(219,39,119,0.08)" : "var(--surface-2)",
               color: post.likedByMe ? "#db2777" : "var(--text-muted)",
-              fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-              transition: "all 0.15s",
+              fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
             }}>
               <Heart size={13} fill={post.likedByMe ? "currentColor" : "none"} /> {post._count?.likes}
             </button>
 
-            {/* React */}
             <div style={{ position: "relative" }}>
               <button onClick={() => setShowReactions(v => !v)} style={{
                 display: "inline-flex", alignItems: "center", gap: "5px",
@@ -447,39 +410,31 @@ function PostCard({
                 border: `1.5px solid ${post.myReaction ? "var(--brand-300)" : "var(--border)"}`,
                 background: post.myReaction ? "var(--brand-50)" : "var(--surface-2)",
                 color: post.myReaction ? "var(--brand-600)" : "var(--text-muted)",
-                fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                transition: "all 0.15s",
+                fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
               }}>
-                {post.myReaction
-                  ? <span style={{ fontSize: "13px" }}>{post.myReaction}</span>
-                  : <SmilePlus size={13} />
-                }
+                {post.myReaction ? <span style={{ fontSize: "13px" }}>{post.myReaction}</span> : <SmilePlus size={13} />}
               </button>
               {showReactions && <ReactionPicker onSelect={handleReact} onClose={() => setShowReactions(false)} />}
             </div>
 
-            {/* Comments */}
             <button onClick={onToggleComments} style={{
               display: "inline-flex", alignItems: "center", gap: "5px",
               padding: "5px 11px", borderRadius: "99px",
               border: `1.5px solid ${expanded ? "var(--brand-300)" : "var(--border)"}`,
               background: expanded ? "var(--brand-50)" : "var(--surface-2)",
               color: expanded ? "var(--brand-600)" : "var(--text-muted)",
-              fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-              transition: "all 0.15s",
+              fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
             }}>
               <MessageCircle size={13} /> {post._count?.comments}
             </button>
 
-            {/* Repost */}
             <button onClick={handleRepost} disabled={reposting} style={{
               display: "inline-flex", alignItems: "center", gap: "5px",
               padding: "5px 11px", borderRadius: "99px",
               border: `1.5px solid ${post.repostedByMe ? "rgba(5,150,105,0.4)" : "var(--border)"}`,
               background: post.repostedByMe ? "rgba(5,150,105,0.08)" : "var(--surface-2)",
               color: post.repostedByMe ? "#059669" : "var(--text-muted)",
-              fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-              transition: "all 0.15s",
+              fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
             }}>
               {reposting ? <Loader2 size={13} className="animate-spin" /> : <Repeat2 size={13} />}
               {post._count?.reposts || 0}
@@ -487,7 +442,6 @@ function PostCard({
 
             <div style={{ flex: 1 }} />
 
-            {/* Bookmark */}
             <button onClick={handleBookmark} disabled={bookmarking} style={{
               display: "inline-flex", alignItems: "center",
               padding: "5px 8px", borderRadius: "99px",
@@ -499,7 +453,6 @@ function PostCard({
             </button>
           </div>
 
-          {/* Comments section */}
           {expanded && (
             <div className="animate-fade-in" style={{ marginTop: "13px", paddingTop: "13px", borderTop: "1px solid var(--border)" }}>
               {comments.length === 0 ? (
@@ -511,13 +464,8 @@ function PostCard({
                   {comments.map(c => (
                     <div key={c.id} style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
                       <UserAvatar name={c.author.displayName} size={28} />
-                      <div style={{
-                        background: "var(--surface-2)", borderRadius: "12px",
-                        padding: "8px 12px", flex: 1, border: "1px solid var(--border)",
-                      }}>
-                        <span style={{ fontWeight: 700, fontSize: "12px", color: "var(--text-primary)" }}>
-                          {c.author.displayName}
-                        </span>
+                      <div style={{ background: "var(--surface-2)", borderRadius: "12px", padding: "8px 12px", flex: 1, border: "1px solid var(--border)" }}>
+                        <span style={{ fontWeight: 700, fontSize: "12px", color: "var(--text-primary)" }}>{c.author.displayName}</span>
                         <MentionText text={c.content} style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.6, marginTop: "2px" }} />
                       </div>
                     </div>
@@ -534,8 +482,7 @@ function PostCard({
                     flex: 1, padding: "9px 13px", borderRadius: "11px",
                     border: "1.5px solid var(--border)", fontSize: "13px",
                     fontFamily: "inherit", outline: "none",
-                    background: "var(--input-bg)", color: "var(--text-primary)",
-                    transition: "border-color 0.15s",
+                    background: "var(--input-bg)", color: "var(--text-primary)", transition: "border-color 0.15s",
                   }}
                   onFocus={e => (e.target.style.borderColor = "var(--brand-400)")}
                   onBlur={e => (e.target.style.borderColor = "var(--border)")}
@@ -588,21 +535,21 @@ function MentionDropdown({ users, onSelect }: { users: string[]; onSelect: (u: s
 
 /* ── FeedPage ─────────────────────────────────────────────────────────────────── */
 export default function FeedPage({ currentUserId }: { currentUserId: string }) {
-  const [posts, setPosts]             = useState<Post[]>([]);
-  const [content, setContent]         = useState("");
-  const [mediaFile, setMediaFile]     = useState<File | null>(null);
+  const [posts, setPosts]               = useState<Post[]>([]);
+  const [content, setContent]           = useState("");
+  const [mediaFile, setMediaFile]       = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<{ url: string; type: string } | null>(null);
-  const [loading, setLoading]         = useState(true);
-  const [posting, setPosting]         = useState(false);
+  const [loading, setLoading]           = useState(true);
+  const [posting, setPosting]           = useState(false);
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
-  const [comments, setComments]       = useState<Record<string, Comment[]>>({});
+  const [comments, setComments]         = useState<Record<string, Comment[]>>({});
   const [commentInput, setCommentInput] = useState<Record<string, string>>({});
-  const [submitting, setSubmitting]   = useState<string | null>(null);
-  const [showAi, setShowAi]           = useState(false);
+  const [submitting, setSubmitting]     = useState<string | null>(null);
+  const [showAi, setShowAi]             = useState(false);
   const [mentionSuggestions, setMentionSuggestions] = useState<string[]>([]);
   const [allUsernames, setAllUsernames] = useState<string[]>([]);
-  const imageRef = useRef<HTMLInputElement>(null);
-  const videoRef = useRef<HTMLInputElement>(null);
+  const imageRef   = useRef<HTMLInputElement>(null);
+  const videoRef   = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -693,13 +640,11 @@ export default function FeedPage({ currentUserId }: { currentUserId: string }) {
       <input ref={videoRef} type="file" accept="video/*" style={{ display: "none" }}
         onChange={e => e.target.files?.[0] && handleMediaSelect(e.target.files[0])} />
 
-      {/* Header */}
       <div className="animate-fade-up">
         <h2 style={{ fontSize: "22px", fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.5px", color: "var(--text-primary)" }}>Home</h2>
         <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>What's happening on campus</p>
       </div>
 
-      {/* Compose card */}
       <div className="animate-fade-up stagger-1" style={{
         background: "var(--card-bg)", borderRadius: "18px", padding: "18px",
         border: "1.5px solid var(--border)", boxShadow: "var(--shadow-card)",
@@ -774,7 +719,6 @@ export default function FeedPage({ currentUserId }: { currentUserId: string }) {
         </div>
       </div>
 
-      {/* Feed */}
       {loading ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           {[1, 2, 3].map(i => (
@@ -789,14 +733,9 @@ export default function FeedPage({ currentUserId }: { currentUserId: string }) {
           ))}
         </div>
       ) : posts.length === 0 ? (
-        <div style={{
-          background: "var(--card-bg)", borderRadius: "18px", padding: "52px 32px",
-          textAlign: "center", border: "1.5px solid var(--border)",
-        }}>
+        <div style={{ background: "var(--card-bg)", borderRadius: "18px", padding: "52px 32px", textAlign: "center", border: "1.5px solid var(--border)" }}>
           <div style={{ fontSize: "44px", marginBottom: "12px" }}>✨</div>
-          <p style={{ fontWeight: 700, fontSize: "16px", color: "var(--text-secondary)", margin: "0 0 5px" }}>
-            Campus is quiet…
-          </p>
+          <p style={{ fontWeight: 700, fontSize: "16px", color: "var(--text-secondary)", margin: "0 0 5px" }}>Campus is quiet…</p>
           <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>Be the first to share something!</p>
         </div>
       ) : (
