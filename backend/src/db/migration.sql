@@ -212,3 +212,6 @@ CREATE TABLE IF NOT EXISTS materials (
   uploaded_by UUID        REFERENCES users(id) ON DELETE SET NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS cover_url TEXT;

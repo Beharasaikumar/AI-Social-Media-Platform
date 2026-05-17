@@ -1,47 +1,48 @@
 // src/hooks/useAuth.ts
+// The key fix: initialize user state SYNCHRONOUSLY from localStorage so
+// `loading` is never true when the value is already available.
+// This prevents the App from flashing through a "loading" state that
+// unmounts and remounts LoginPage mid-typing.
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import type { User } from "../types";
 
-export function useAuth() {
-  const [user, setUser]       = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
+function readStoredUser(): User | null {
+  try {
     const token    = localStorage.getItem("token");
     const userData = localStorage.getItem("user");
-    if (token && userData) {
-      try { setUser(JSON.parse(userData)); }
-      catch {
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-      }
-    }
-    setLoading(false);
-  }, []);
+    if (token && userData) return JSON.parse(userData) as User;
+  } catch {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  }
+  return null;
+}
 
-  const login = (token: string, userData: User) => {
+export function useAuth() {
+  // Initialize synchronously — no useEffect, no loading flash
+  const [user, setUser] = useState<User | null>(readStoredUser);
+
+  const login = useCallback((token: string, userData: User) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
-  };
+  }, []);
 
-  // Merges a partial update (e.g. { username, displayName, bio })
-  // into the current user and persists to localStorage immediately.
-  const updateUser = (updated: Partial<User>) => {
-    setUser(prev => {
+  const updateUser = useCallback((updated: Partial<User>) => {
+    setUser((prev) => {
       if (!prev) return prev;
       const next = { ...prev, ...updated };
       localStorage.setItem("user", JSON.stringify(next));
       return next;
     });
-  };
+  }, []);
 
-  return { user, loading, login, logout, updateUser };
+  return { user, loading: false, login, logout, updateUser };
 }

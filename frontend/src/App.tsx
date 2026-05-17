@@ -18,76 +18,54 @@ import AnnouncementsPage from "./pages/AnnouncementsPage";
 import MaterialsPage from "./pages/MaterialsPage";
 
 export default function App() {
-  const { user, loading, login, logout, updateUser } = useAuth();
+  // useAuth now initializes synchronously from localStorage — loading is
+  // always false so we never gate the render behind a spinner that would
+  // unmount and remount LoginPage while the user is typing.
+  const { user, login, logout, updateUser } = useAuth();
   const { dark, toggle: toggleDark } = useDarkMode();
 
-  if (loading) {
-    return (
-      <div style={{
-        minHeight: "100vh", display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        background: "linear-gradient(135deg, #eef2ff, #fdf2f8)", gap: "16px",
-      }}>
-        <div style={{
-          width: 44, height: 44, borderRadius: "14px",
-          background: "linear-gradient(135deg, #6366f1, #ec4899)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 8px 24px rgba(99,102,241,0.3)",
-        }}>
-          <div style={{
-            width: 20, height: 20,
-            border: "2.5px solid rgba(255,255,255,0.4)",
-            borderTop: "2.5px solid white",
-            borderRadius: "50%",
-            animation: "spin 0.8s linear infinite",
-          }} />
-        </div>
-        <p style={{ color: "var(--text-muted)", fontSize: "13px", fontWeight: 500 }}>
-          Loading CampusConnect…
-        </p>
-      </div>
-    );
+  // Not logged in — render LoginPage with a stable key so it is never
+  // remounted by React unless the user explicitly navigates away.
+  if (!user) {
+    return <LoginPage key="login" onLogin={login} />;
   }
 
+  // Logged in — render the full app shell
   return (
     <BrowserRouter>
       <Routes>
-        {!user ? (
-          <Route path="*" element={<LoginPage onLogin={login} />} />
-        ) : (
-          <Route
-            path="*"
-            element={
-              <MainLayout
-                onLogout={logout}
-                username={user.username}
-                displayName={user.displayName}
-                dark={dark}
-                onToggleDark={toggleDark}
-                isAdmin={user.isAdmin}
-              >
-                <Routes>
-                  <Route path="/" element={<FeedPage currentUserId={user.id} />} />
-                  <Route path="/explore" element={<ExplorePage currentUserId={user.id} />} />
-                  <Route path="/placements" element={<PlacementsPage />} />
-                  <Route path="/announcements" element={<AnnouncementsPage />} />
-                  <Route path="/materials" element={<MaterialsPage />} />
-                  <Route path="/notifications" element={<NotificationsPage />} />
-                  <Route path="/bookmarks" element={<BookmarksPage />} />
-                  <Route path="/profile" element={<ProfilePage user={user} onUserUpdate={updateUser} />} />
-                  <Route path="/post/:id" element={<PostPage />} />
-                  <Route path="/user/:username" element={<UserProfilePage />} />
-                  <Route path="/messages" element={<DMPage currentUserId={user.id} />} />
-                  <Route path="/messages/:conversationId" element={<DMPage currentUserId={user.id} />} />
-                  
-                  {user.isAdmin && <Route path="/admin" element={<AdminDashboard />} />}
-                  
-                  <Route path="*" element={<Navigate to="/" />} />
-                </Routes>
-              </MainLayout>
-            }
-          />
-        )}
+        <Route
+          path="*"
+          element={
+            <MainLayout
+              onLogout={logout}
+              username={user.username}
+              displayName={user.displayName}
+              dark={dark}
+              onToggleDark={toggleDark}
+              isAdmin={user.isAdmin}
+            >
+              <Routes>
+                <Route path="/"             element={<FeedPage currentUserId={user.id} />} />
+                <Route path="/explore"      element={<ExplorePage currentUserId={user.id} />} />
+                <Route path="/placements"   element={<PlacementsPage />} />
+                <Route path="/announcements" element={<AnnouncementsPage />} />
+                <Route path="/materials"    element={<MaterialsPage />} />
+                <Route path="/notifications" element={<NotificationsPage />} />
+                <Route path="/bookmarks"    element={<BookmarksPage />} />
+                <Route path="/profile"      element={<ProfilePage user={user} onUserUpdate={updateUser} />} />
+                <Route path="/post/:id"     element={<PostPage />} />
+                <Route path="/user/:username" element={<UserProfilePage />} />
+                <Route path="/messages"     element={<DMPage currentUserId={user.id} />} />
+                <Route path="/messages/:conversationId" element={<DMPage currentUserId={user.id} />} />
+                {user.isAdmin && (
+                  <Route path="/admin" element={<AdminDashboard />} />
+                )}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </MainLayout>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

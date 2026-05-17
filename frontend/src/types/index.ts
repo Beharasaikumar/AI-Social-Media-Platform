@@ -1,13 +1,14 @@
+// src/types/index.ts
+
 export interface User {
   id: string;
   username: string;
   displayName: string;
   bio?: string;
   avatarUrl?: string;
+  coverUrl?: string;       // ← new
   createdAt: string;
-
   isAdmin?: boolean;
-
   _count?: {
     posts: number;
     followers: number;
@@ -30,7 +31,7 @@ export interface Post {
   updatedAt?: string;
   repostOfId?: string;
   repostOf?: Post;
-  _count?: { comments: number; likes: number; reposts: number; reactions: number; };
+  _count?: { comments: number; likes: number; reposts: number; reactions: number };
   likedByMe?: boolean;
   repostedByMe?: boolean;
   bookmarkedByMe?: boolean;

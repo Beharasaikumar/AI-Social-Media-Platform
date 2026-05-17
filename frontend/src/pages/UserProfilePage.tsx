@@ -1,5 +1,4 @@
 // src/pages/UserProfilePage.tsx
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -16,18 +15,38 @@ interface PublicUser {
   username: string;
   displayName: string;
   bio?: string;
+  avatarUrl?: string;
+  coverUrl?: string;
   createdAt: string;
   isFollowing: boolean;
   _count: { posts: number; followers: number; following: number };
 }
 
-function UserAvatar({ name, size = 38 }: { name: string; size?: number }) {
+// ── Avatar ────────────────────────────────────────────────────────────────────
+function UserAvatar({
+  name, avatarUrl, size = 38,
+}: { name: string; avatarUrl?: string; size?: number }) {
   const palettes = [
     { bg: "#ede9fe", fg: "#7c3aed" }, { bg: "#fce7f3", fg: "#db2777" },
     { bg: "#d1fae5", fg: "#059669" }, { bg: "#fef3c7", fg: "#d97706" },
     { bg: "#dbeafe", fg: "#2563eb" }, { bg: "#f3e8ff", fg: "#9333ea" },
   ];
   const { bg, fg } = palettes[name.charCodeAt(0) % palettes.length];
+
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        style={{
+          width: size, height: size, borderRadius: "50%",
+          objectFit: "cover", flexShrink: 0,
+          border: "3px solid white",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+        }}
+      />
+    );
+  }
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%", flexShrink: 0,
@@ -36,24 +55,34 @@ function UserAvatar({ name, size = 38 }: { name: string; size?: number }) {
       display: "flex", alignItems: "center", justifyContent: "center",
       fontSize: size * 0.36, fontWeight: 800, color: fg,
       boxShadow: `0 4px 16px ${fg}30`,
-    }}>{name[0]?.toUpperCase()}</div>
-  );
-}
-
-function StatBox({ value, label }: { value: number; label: string }) {
-  return (
-    <div style={{ textAlign: "center", flex: 1 }}>
-      <p style={{ fontSize: "22px", fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.5px", color: "var(--text-primary)" }}>
-        {value}
-      </p>
-      <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0, fontWeight: 500 }}>{label}</p>
+    }}>
+      {name[0]?.toUpperCase()}
     </div>
   );
 }
 
+// ── Stat box ──────────────────────────────────────────────────────────────────
+function StatBox({ value, label }: { value: number; label: string }) {
+  return (
+    <div style={{ textAlign: "center", flex: 1 }}>
+      <p style={{
+        fontSize: "22px", fontWeight: 800, margin: "0 0 2px",
+        letterSpacing: "-0.5px", color: "var(--text-primary)",
+      }}>
+        {value}
+      </p>
+      <p style={{ fontSize: "11px", color: "var(--text-muted)", margin: 0, fontWeight: 500 }}>
+        {label}
+      </p>
+    </div>
+  );
+}
+
+// ── UserProfilePage ───────────────────────────────────────────────────────────
 export default function UserProfilePage() {
-  const { username }                  = useParams<{ username: string }>();
-  const navigate                      = useNavigate();
+  const { username } = useParams<{ username: string }>();
+  const navigate     = useNavigate();
+
   const [profile, setProfile]         = useState<PublicUser | null>(null);
   const [posts, setPosts]             = useState<Post[]>([]);
   const [loading, setLoading]         = useState(true);
@@ -68,12 +97,14 @@ export default function UserProfilePage() {
     Promise.all([
       client.get(`/auth/user/${username}`),
       client.get(`/auth/user/${username}/posts`),
-    ]).then(([profileRes, postsRes]) => {
-      setProfile(profileRes.data);
-      setFollowing(profileRes.data.isFollowing);
-      setFollowerCount(profileRes.data._count.followers);
-      setPosts(postsRes.data);
-    }).catch(() => setError("User not found."))
+    ])
+      .then(([profileRes, postsRes]) => {
+        setProfile(profileRes.data);
+        setFollowing(profileRes.data.isFollowing);
+        setFollowerCount(profileRes.data._count.followers);
+        setPosts(postsRes.data);
+      })
+      .catch(() => setError("User not found."))
       .finally(() => setLoading(false));
   }, [username]);
 
@@ -96,19 +127,27 @@ export default function UserProfilePage() {
     } finally { setDmLoading(false); }
   };
 
-  // ── Loading ──
+  // ── Loading skeleton ───────────────────────────────────────────────────────
   if (loading) return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <button onClick={() => navigate(-1)} style={{
         display: "flex", alignItems: "center", gap: "8px", border: "none",
         background: "none", cursor: "pointer", fontSize: "14px",
         fontWeight: 600, color: "var(--text-secondary)", padding: 0,
-      }}><ArrowLeft size={16} /> Back</button>
-      <div style={{ background: "white", borderRadius: "20px", border: "1.5px solid var(--border)", overflow: "hidden" }}>
-        <div className="shimmer" style={{ height: 100 }} />
+      }}>
+        <ArrowLeft size={16} /> Back
+      </button>
+      <div style={{
+        background: "var(--card-bg)", borderRadius: "20px",
+        border: "1.5px solid var(--border)", overflow: "hidden",
+      }}>
+        <div className="shimmer" style={{ height: 140 }} />
         <div style={{ padding: "0 24px 24px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: -36, marginBottom: 16 }}>
-            <div className="shimmer" style={{ width: 72, height: 72, borderRadius: "50%", border: "4px solid white" }} />
+          <div style={{
+            display: "flex", justifyContent: "space-between",
+            alignItems: "flex-end", marginTop: -42, marginBottom: 16,
+          }}>
+            <div className="shimmer" style={{ width: 80, height: 80, borderRadius: "50%", border: "4px solid var(--card-bg)" }} />
             <div style={{ display: "flex", gap: "8px" }}>
               <div className="shimmer" style={{ width: 90, height: 36, borderRadius: 10 }} />
               <div className="shimmer" style={{ width: 90, height: 36, borderRadius: 10 }} />
@@ -121,64 +160,85 @@ export default function UserProfilePage() {
     </div>
   );
 
-  // ── Error ──
+  // ── Error ──────────────────────────────────────────────────────────────────
   if (error || !profile) return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       <button onClick={() => navigate(-1)} style={{
         display: "flex", alignItems: "center", gap: "8px", border: "none",
         background: "none", cursor: "pointer", fontSize: "14px",
         fontWeight: 600, color: "var(--text-secondary)", padding: 0,
-      }}><ArrowLeft size={16} /> Back</button>
-      <div style={{ background: "white", borderRadius: "18px", padding: "56px 24px", textAlign: "center", border: "1.5px solid #fecdd3" }}>
+      }}>
+        <ArrowLeft size={16} /> Back
+      </button>
+      <div style={{
+        background: "var(--card-bg)", borderRadius: "18px", padding: "56px 24px",
+        textAlign: "center", border: "1.5px solid #fecdd3",
+      }}>
         <AlertCircle size={32} style={{ color: "#f43f5e", margin: "0 auto 14px", display: "block" }} />
-        <p style={{ fontWeight: 700, fontSize: "16px", color: "var(--text-primary)", margin: "0 0 6px" }}>User not found</p>
-        <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>This profile doesn't exist or was removed.</p>
+        <p style={{ fontWeight: 700, fontSize: "16px", color: "var(--text-primary)", margin: "0 0 6px" }}>
+          User not found
+        </p>
+        <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>
+          This profile doesn't exist or was removed.
+        </p>
       </div>
     </div>
   );
 
+  // ── Profile ────────────────────────────────────────────────────────────────
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }} className="animate-fade-up">
 
       {/* Back */}
-      <button onClick={() => navigate(-1)} style={{
-        display: "flex", alignItems: "center", gap: "8px", border: "none",
-        background: "none", cursor: "pointer", fontSize: "14px",
-        fontWeight: 600, color: "var(--text-secondary)", padding: 0,
-        width: "fit-content", transition: "color 0.15s",
-      }}
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          display: "flex", alignItems: "center", gap: "8px", border: "none",
+          background: "none", cursor: "pointer", fontSize: "14px",
+          fontWeight: 600, color: "var(--text-secondary)", padding: 0,
+          width: "fit-content", transition: "color 0.15s",
+        }}
         onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.color = "#6366f1"}
         onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)"}
       >
         <ArrowLeft size={16} /> Back
       </button>
 
-      {/* Profile hero */}
+      {/* ── Hero card ──────────────────────────────────────────────────── */}
       <div style={{
-        background: "white", borderRadius: "20px",
+        background: "var(--card-bg)", borderRadius: "20px",
         border: "1.5px solid var(--border)", overflow: "hidden",
-        boxShadow: "0 2px 16px rgba(99,102,241,0.06)",
+        boxShadow: "var(--shadow-card)",
       }}>
-        {/* Banner */}
-        <div style={{
-          height: 110,
-          background: "linear-gradient(135deg, #c7d2fe 0%, #e0e7ff 40%, #fce7f3 100%)",
-        }} />
+
+        {/* Cover photo */}
+        <div style={{ height: 140, position: "relative" }}>
+          {profile.coverUrl ? (
+            <img
+              src={profile.coverUrl}
+              alt="Cover"
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          ) : (
+            <div style={{
+              height: "100%",
+              background: "linear-gradient(135deg, #c7d2fe 0%, #e0e7ff 40%, #fce7f3 100%)",
+            }} />
+          )}
+        </div>
 
         <div style={{ padding: "0 24px 24px" }}>
-          {/* Avatar + action buttons row */}
+          {/* Avatar + action buttons */}
           <div style={{
             display: "flex", alignItems: "flex-end",
             justifyContent: "space-between",
-            marginTop: -40, marginBottom: 16,
+            marginTop: -42, marginBottom: 16,
             flexWrap: "wrap", gap: "8px",
           }}>
-            {/* Avatar */}
-            <UserAvatar name={profile.displayName} size={76} />
+            <UserAvatar name={profile.displayName} avatarUrl={profile.avatarUrl} size={80} />
 
-            {/* Action buttons — grouped together */}
             <div style={{ display: "flex", gap: "8px", marginBottom: 4, flexWrap: "wrap" }}>
-              {/* Message button */}
+              {/* Message */}
               <button
                 onClick={handleDM}
                 disabled={dmLoading}
@@ -186,11 +246,11 @@ export default function UserProfilePage() {
                   display: "flex", alignItems: "center", gap: "6px",
                   padding: "9px 18px", borderRadius: "12px",
                   border: "1.5px solid var(--border)",
-                  background: "white",
+                  background: "var(--card-bg)",
                   color: "var(--text-secondary)",
                   fontSize: "13px", fontWeight: 700,
                   cursor: dmLoading ? "not-allowed" : "pointer",
-                  transition: "all 0.2s",
+                  transition: "all 0.2s", fontFamily: "inherit",
                 }}
                 onMouseEnter={e => {
                   (e.currentTarget as HTMLButtonElement).style.borderColor = "#6366f1";
@@ -200,31 +260,27 @@ export default function UserProfilePage() {
                 onMouseLeave={e => {
                   (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
                   (e.currentTarget as HTMLButtonElement).style.color = "var(--text-secondary)";
-                  (e.currentTarget as HTMLButtonElement).style.background = "white";
+                  (e.currentTarget as HTMLButtonElement).style.background = "var(--card-bg)";
                 }}
               >
-                {dmLoading
-                  ? <Loader2 size={13} className="animate-spin" />
-                  : <MessageSquare size={13} />
-                }
+                {dmLoading ? <Loader2 size={13} className="animate-spin" /> : <MessageSquare size={13} />}
                 Message
               </button>
 
-              {/* Follow button */}
+              {/* Follow */}
               <button
                 onClick={handleFollow}
                 disabled={followLoading}
                 style={{
                   display: "flex", alignItems: "center", gap: "7px",
-                  padding: "9px 20px", borderRadius: "12px",
-                  border: "none",
+                  padding: "9px 20px", borderRadius: "12px", border: "none",
                   background: following
                     ? "var(--surface-2)"
                     : "linear-gradient(135deg, #6366f1, #818cf8)",
                   color: following ? "var(--text-secondary)" : "white",
                   fontSize: "13px", fontWeight: 700,
                   cursor: followLoading ? "not-allowed" : "pointer",
-                  transition: "all 0.2s",
+                  transition: "all 0.2s", fontFamily: "inherit",
                   boxShadow: following ? "none" : "0 4px 14px rgba(99,102,241,0.3)",
                   outline: following ? "1.5px solid var(--border)" : "none",
                 }}
@@ -252,35 +308,41 @@ export default function UserProfilePage() {
             </div>
           </div>
 
-          {/* Name + bio */}
-          <p style={{ fontSize: "20px", fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.4px", color: "var(--text-primary)" }}>
+          {/* Name / bio */}
+          <p style={{
+            fontSize: "20px", fontWeight: 800, margin: "0 0 2px",
+            letterSpacing: "-0.4px", color: "var(--text-primary)",
+          }}>
             {profile.displayName}
           </p>
           <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: "0 0 10px" }}>
             @{profile.username}
           </p>
           {profile.bio && (
-            <p style={{ fontSize: "14px", color: "var(--text-secondary)", margin: "0 0 16px", lineHeight: 1.65 }}>
+            <p style={{
+              fontSize: "14px", color: "var(--text-secondary)",
+              margin: "0 0 16px", lineHeight: 1.65,
+            }}>
               {profile.bio}
             </p>
           )}
 
           {/* Stats */}
           <div style={{ display: "flex", paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-            <StatBox value={profile._count.posts} label="Posts" />
+            <StatBox value={profile._count.posts}    label="Posts" />
             <div style={{ width: 1, background: "var(--border)" }} />
-            <StatBox value={followerCount} label="Followers" />
+            <StatBox value={followerCount}            label="Followers" />
             <div style={{ width: 1, background: "var(--border)" }} />
             <StatBox value={profile._count.following} label="Following" />
           </div>
         </div>
       </div>
 
-      {/* Posts */}
+      {/* ── Posts ──────────────────────────────────────────────────────── */}
       <div style={{
-        background: "white", borderRadius: "20px",
+        background: "var(--card-bg)", borderRadius: "20px",
         border: "1.5px solid var(--border)", overflow: "hidden",
-        boxShadow: "0 2px 16px rgba(99,102,241,0.06)",
+        boxShadow: "var(--shadow-card)",
       }}>
         <div style={{
           padding: "16px 20px", borderBottom: "1px solid var(--border)",
@@ -293,14 +355,18 @@ export default function UserProfilePage() {
             padding: "2px 10px", borderRadius: "99px",
             background: "var(--brand-50)", color: "var(--brand-600)",
             border: "1px solid var(--brand-200)",
-          }}>{posts.length}</span>
+          }}>
+            {posts.length}
+          </span>
         </div>
 
         <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
           {posts.length === 0 ? (
             <div style={{ padding: "32px 0", textAlign: "center" }}>
-              <Grid3x3 size={28} style={{ color: "#e2e8f0", margin: "0 auto 10px", display: "block" }} />
-              <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-secondary)", margin: "0 0 4px" }}>No posts yet</p>
+              <Grid3x3 size={28} style={{ color: "var(--border)", margin: "0 auto 10px", display: "block" }} />
+              <p style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-secondary)", margin: "0 0 4px" }}>
+                No posts yet
+              </p>
               <p style={{ fontSize: "13px", color: "var(--text-muted)", margin: 0 }}>
                 {profile.displayName} hasn't posted anything yet
               </p>
@@ -325,18 +391,42 @@ export default function UserProfilePage() {
                   (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
                 }}
               >
+                {/* Post author row */}
+                <div style={{ padding: "12px 14px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <UserAvatar
+                    name={post.author.displayName}
+                    avatarUrl={post.author.avatarUrl}
+                    size={28}
+                  />
+                  <span style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)" }}>
+                    {post.author.displayName}
+                  </span>
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", marginLeft: "auto" }}>
+                    {formatDate(post.createdAt)}
+                  </span>
+                </div>
+
                 {post.mediaUrl && (
-                  <div style={{ borderBottom: "1px solid var(--border)" }}>
+                  <div style={{ borderTop: "1px solid var(--border)", marginTop: "10px" }}>
                     {post.mediaType === "video" ? (
-                      <video src={post.mediaUrl} style={{ width: "100%", maxHeight: "280px", display: "block", background: "#000", pointerEvents: "none" }} />
+                      <video src={post.mediaUrl} style={{
+                        width: "100%", maxHeight: "280px", display: "block",
+                        background: "#000", pointerEvents: "none",
+                      }} />
                     ) : (
-                      <img src={post.mediaUrl} alt="" style={{ width: "100%", maxHeight: "280px", objectFit: "cover", display: "block" }} />
+                      <img src={post.mediaUrl} alt="" style={{
+                        width: "100%", maxHeight: "280px", objectFit: "cover", display: "block",
+                      }} />
                     )}
                   </div>
                 )}
-                <div style={{ padding: "14px 16px" }}>
+
+                <div style={{ padding: "12px 14px" }}>
                   {post.content && (
-                    <p style={{ fontSize: "14px", color: "#374151", margin: "0 0 10px", lineHeight: 1.7, wordBreak: "break-word" }}>
+                    <p style={{
+                      fontSize: "14px", color: "var(--text-secondary)",
+                      margin: "0 0 10px", lineHeight: 1.7, wordBreak: "break-word",
+                    }}>
                       {post.content}
                     </p>
                   )}
@@ -346,9 +436,6 @@ export default function UserProfilePage() {
                     </span>
                     <span style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "12px", color: "var(--text-muted)", fontWeight: 500 }}>
                       <MessageCircle size={13} style={{ color: "#6366f1" }} /> {post._count?.comments ?? 0}
-                    </span>
-                    <span style={{ marginLeft: "auto", fontSize: "11px", color: "var(--text-muted)" }}>
-                      {formatDate(post.createdAt)}
                     </span>
                   </div>
                 </div>
