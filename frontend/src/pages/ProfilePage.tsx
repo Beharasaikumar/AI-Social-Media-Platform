@@ -2,11 +2,12 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Heart, MessageCircle, Loader2, Pencil, Grid3x3, X,
-  AlertCircle, Repeat2, Camera,
+  AlertCircle, Repeat2, Camera, Trash2,
 } from "lucide-react";
 import { formatDate } from "../lib/utils";
 import type { User, Post } from "../types";
 import client from "../api/client";
+import DeleteConfirmModal from "../components/DeleteConfirmModal";
 
 interface ProfilePageProps {
   user: User;
@@ -15,25 +16,20 @@ interface ProfilePageProps {
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
 function UserAvatar({ name, avatarUrl, size = 38 }: { name: string; avatarUrl?: string; size?: number }) {
-  const palettes = [
-    { bg: "#ede9fe", fg: "#7c3aed" }, { bg: "#fce7f3", fg: "#db2777" },
-    { bg: "#d1fae5", fg: "#059669" }, { bg: "#fef3c7", fg: "#d97706" },
-    { bg: "#dbeafe", fg: "#2563eb" }, { bg: "#f3e8ff", fg: "#9333ea" },
-  ];
-  const { bg, fg } = palettes[name.charCodeAt(0) % palettes.length];
+  const index = name ? name.charCodeAt(0) % 6 : 0;
   if (avatarUrl) {
     return (
       <img src={avatarUrl} alt={name}
-        style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+        style={{ width: size, height: size, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid var(--card-bg)" }} />
     );
   }
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%", flexShrink: 0,
-      background: `linear-gradient(135deg, ${bg}, ${fg}50)`,
-      border: `2px solid ${fg}30`,
+      background: `var(--avatar-bg-${index})`,
+      border: `2px solid var(--avatar-border-${index})`,
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: size * 0.35, fontWeight: 700, color: fg,
+      fontSize: size * 0.35, fontWeight: 700, color: `var(--avatar-fg-${index})`,
     }}>
       {name[0]?.toUpperCase()}
     </div>
@@ -53,17 +49,43 @@ function StatBox({ value, label }: { value: number; label: string }) {
 }
 
 // ── Post card ─────────────────────────────────────────────────────────────────
-function PostCard({ post, showAuthor = false }: { post: Post; showAuthor?: boolean }) {
+function PostCard({ post, showAuthor = false, onDelete }: { post: Post; showAuthor?: boolean; onDelete?: (id: string) => void }) {
   const isPureRepost = !post.content && !post.mediaUrl && !!post.repostOf;
   const display = isPureRepost && post.repostOf ? post.repostOf : post;
   return (
     <div style={{
       background: "var(--card-bg)", borderRadius: "14px", border: "1.5px solid var(--border)",
       overflow: "hidden", transition: "transform 0.2s, box-shadow 0.2s",
+      position: "relative",
     }}
       onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(99,102,241,0.1)"; }}
       onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; }}
     >
+      {onDelete && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(post.id);
+          }}
+          title="Delete post"
+          style={{
+            position: "absolute", top: 12, right: 12,
+            background: "var(--surface-2)", border: "none",
+            borderRadius: "8px", width: 28, height: 28,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", color: "#ef4444", transition: "all 0.15s",
+            zIndex: 2,
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(239, 68, 68, 0.1)";
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.background = "var(--surface-2)";
+          }}
+        >
+          <Trash2 size={13} />
+        </button>
+      )}
       {isPureRepost && (
         <div style={{ padding: "8px 14px", display: "flex", alignItems: "center", gap: "6px", borderBottom: "1px solid var(--border)", background: "var(--surface-2)" }}>
           <Repeat2 size={12} style={{ color: "var(--text-muted)" }} />
@@ -226,6 +248,25 @@ export default function ProfilePage({ user, onUserUpdate }: ProfilePageProps) {
   const [loading, setLoading]         = useState(true);
   const [editOpen, setEditOpen]       = useState(false);
 
+  // ── Post deletion state ───────────────────────────────────────────────────
+  const [pendingDeletePostId, setPendingDeletePostId] = useState<string | null>(null);
+  const [deletingPost, setDeletingPost]               = useState(false);
+
+  const handleDeletePostConfirm = async () => {
+    if (!pendingDeletePostId) return;
+    setDeletingPost(true);
+    try {
+      await client.delete(`/posts/${pendingDeletePostId}`);
+      setMyPosts(prev => prev.filter(p => p.id !== pendingDeletePostId));
+      setLikedPosts(prev => prev.filter(p => p.id !== pendingDeletePostId));
+      setPendingDeletePostId(null);
+    } catch (e) {
+      console.error("Failed to delete post", e);
+    } finally {
+      setDeletingPost(false);
+    }
+  };
+
   // ── Image upload state ────────────────────────────────────────────────────
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [coverUploading, setCoverUploading]   = useState(false);
@@ -303,6 +344,17 @@ export default function ProfilePage({ user, onUserUpdate }: ProfilePageProps) {
         <EditModal user={user} onSave={u => { onUserUpdate(u); setEditOpen(false); }} onClose={() => setEditOpen(false)} />
       )}
 
+      {pendingDeletePostId && (
+        <DeleteConfirmModal
+          title="Delete post?"
+          message="This post will be permanently removed from CampusConnect."
+          confirmLabel="Delete post"
+          onConfirm={handleDeletePostConfirm}
+          onCancel={() => setPendingDeletePostId(null)}
+          loading={deletingPost}
+        />
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
         {/* ── Profile hero card ─────────────────────────────────────────── */}
@@ -350,6 +402,7 @@ export default function ProfilePage({ user, onUserUpdate }: ProfilePageProps) {
             <div style={{
               marginTop: "-40px", marginBottom: "12px",
               display: "flex", alignItems: "flex-end", justifyContent: "space-between",
+              position: "relative", zIndex: 1,
             }}>
               {/* Avatar with upload button */}
               <div style={{ position: "relative", flexShrink: 0 }}>
@@ -487,7 +540,14 @@ export default function ProfilePage({ user, onUserUpdate }: ProfilePageProps) {
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {displayedPosts.map(post => <PostCard key={post.id} post={post} showAuthor={activeTab === "liked"} />)}
+                {displayedPosts.map(post => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    showAuthor={activeTab === "liked"}
+                    onDelete={activeTab === "posts" ? (id) => setPendingDeletePostId(id) : undefined}
+                  />
+                ))}
               </div>
             )}
           </div>

@@ -16,19 +16,14 @@ import {
 // ── Avatar ─────────────────────────────────────────────────────────────────────
 
 function Avatar({ name, size = 36 }: { name: string; size?: number }) {
-  const palettes = [
-    { bg: "#ede9fe", fg: "#7c3aed" }, { bg: "#fce7f3", fg: "#db2777" },
-    { bg: "#d1fae5", fg: "#059669" }, { bg: "#fef3c7", fg: "#d97706" },
-    { bg: "#dbeafe", fg: "#2563eb" }, { bg: "#f3e8ff", fg: "#9333ea" },
-  ];
-  const { bg, fg } = palettes[name.charCodeAt(0) % palettes.length];
+  const index = name ? name.charCodeAt(0) % 6 : 0;
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%", flexShrink: 0,
-      background: `linear-gradient(135deg, ${bg}, ${fg}30)`,
-      border: `2px solid ${fg}25`,
+      background: `var(--avatar-bg-${index})`,
+      border: `2px solid var(--avatar-border-${index})`,
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: size * 0.36, fontWeight: 700, color: fg,
+      fontSize: size * 0.36, fontWeight: 700, color: `var(--avatar-fg-${index})`,
     }}>
       {name[0]?.toUpperCase()}
     </div>
@@ -119,9 +114,9 @@ function ConversationList({
                   display: "flex", gap: "10px", alignItems: "center",
                   padding: "11px 14px",
                   borderBottom: "1px solid var(--border)",
-                  background: isActive ? "#eef2ff" : "transparent",
+                  background: isActive ? "var(--brand-50)" : "transparent",
                   border: "none",
-                  borderLeft: isActive ? "3px solid #6366f1" : "3px solid transparent",
+                  borderLeft: isActive ? "3px solid var(--brand-500)" : "3px solid transparent",
                   cursor: "pointer", transition: "background 0.12s",
                 }}
                 onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.background = "var(--surface-2)"; }}

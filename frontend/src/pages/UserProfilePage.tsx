@@ -26,12 +26,7 @@ interface PublicUser {
 function UserAvatar({
   name, avatarUrl, size = 38,
 }: { name: string; avatarUrl?: string; size?: number }) {
-  const palettes = [
-    { bg: "#ede9fe", fg: "#7c3aed" }, { bg: "#fce7f3", fg: "#db2777" },
-    { bg: "#d1fae5", fg: "#059669" }, { bg: "#fef3c7", fg: "#d97706" },
-    { bg: "#dbeafe", fg: "#2563eb" }, { bg: "#f3e8ff", fg: "#9333ea" },
-  ];
-  const { bg, fg } = palettes[name.charCodeAt(0) % palettes.length];
+  const index = name ? name.charCodeAt(0) % 6 : 0;
 
   if (avatarUrl) {
     return (
@@ -41,7 +36,7 @@ function UserAvatar({
         style={{
           width: size, height: size, borderRadius: "50%",
           objectFit: "cover", flexShrink: 0,
-          border: "3px solid white",
+          border: "3px solid var(--card-bg)",
           boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
         }}
       />
@@ -50,11 +45,11 @@ function UserAvatar({
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%", flexShrink: 0,
-      background: `linear-gradient(135deg, ${bg}, ${fg}40)`,
-      border: "3px solid white",
+      background: `var(--avatar-bg-${index})`,
+      border: "3px solid var(--card-bg)",
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: size * 0.36, fontWeight: 800, color: fg,
-      boxShadow: `0 4px 16px ${fg}30`,
+      fontSize: size * 0.36, fontWeight: 800, color: `var(--avatar-fg-${index})`,
+      boxShadow: `0 4px 16px var(--avatar-border-${index})`,
     }}>
       {name[0]?.toUpperCase()}
     </div>
@@ -234,6 +229,7 @@ export default function UserProfilePage() {
             justifyContent: "space-between",
             marginTop: -42, marginBottom: 16,
             flexWrap: "wrap", gap: "8px",
+            position: "relative", zIndex: 1,
           }}>
             <UserAvatar name={profile.displayName} avatarUrl={profile.avatarUrl} size={80} />
 

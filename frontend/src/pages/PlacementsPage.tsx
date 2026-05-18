@@ -89,11 +89,11 @@ export default function PlacementsPage() {
               <div style={{ display: "flex", gap: "12px" }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: "10px",
-                  background: "linear-gradient(135deg, #c7d2fe, #e0e7ff)",
+                  background: "var(--placement-gradient)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   flexShrink: 0,
                 }}>
-                  <Briefcase size={20} style={{ color: "#6366f1" }} />
+                  <Briefcase size={20} style={{ color: "var(--brand-500)" }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "start", justifyContent: "space-between", marginBottom: "8px" }}>

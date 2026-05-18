@@ -6,13 +6,14 @@ interface MainLayoutProps {
   onLogout: () => void;
   username: string;
   displayName: string;
+  avatarUrl?: string;
   dark: boolean;
   onToggleDark: () => void;
   isAdmin?: boolean;
 }
 
 export default function MainLayout({
-  children, onLogout, username, displayName, dark, onToggleDark, isAdmin
+  children, onLogout, username, displayName, avatarUrl, dark, onToggleDark, isAdmin
 }: MainLayoutProps) {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-page)", transition: "background 0.3s" }}>
@@ -20,6 +21,7 @@ export default function MainLayout({
         onLogout={onLogout}
         username={username}
         displayName={displayName}
+        avatarUrl={avatarUrl}
         dark={dark}
         onToggleDark={onToggleDark}
         isAdmin={isAdmin}

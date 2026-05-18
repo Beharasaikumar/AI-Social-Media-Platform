@@ -37,6 +37,7 @@ export default function App() {
               onLogout={logout}
               username={user.username}
               displayName={user.displayName}
+              avatarUrl={user.avatarUrl}
               dark={dark}
               onToggleDark={toggleDark}
               isAdmin={user.isAdmin}

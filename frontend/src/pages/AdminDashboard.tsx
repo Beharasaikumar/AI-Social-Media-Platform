@@ -42,6 +42,7 @@ export default function AdminDashboard() {
   const [announcementForm, setAnnouncementForm] = useState({ title: "", content: "" });
   const [materialForm, setMaterialForm]         = useState({ title: "", description: "" });
   const [materialFile, setMaterialFile]         = useState<File | null>(null);
+  const [materialError, setMaterialError]       = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([getPlacements(), getAnnouncements(), getMaterials()])
@@ -75,12 +76,17 @@ export default function AdminDashboard() {
   const handleAddMaterial = async () => {
     if (!materialForm.title || !materialFile) return;
     setSubmitting(true);
+    setMaterialError(null);
     try {
       const newM = await uploadMaterial(materialForm.title, materialForm.description, materialFile);
       setMaterials([newM, ...materials]);
       setMaterialForm({ title: "", description: "" });
       setMaterialFile(null);
+      setMaterialError(null);
       setShowAddMaterial(false);
+    } catch (err: any) {
+      console.error(err);
+      setMaterialError(err?.response?.data?.message || "Failed to upload file. Please check file size/type and try again.");
     } finally { setSubmitting(false); }
   };
 
@@ -382,7 +388,7 @@ export default function AdminDashboard() {
         ) : (
           /* ════════════════ MATERIALS ════════════════ */
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            <button onClick={() => setShowAddMaterial(true)} style={{
+            <button onClick={() => { setShowAddMaterial(true); setMaterialError(null); }} style={{
               padding: "10px 16px", borderRadius: "10px",
               background: "linear-gradient(135deg, #6366f1, #818cf8)",
               color: "white", border: "none", fontSize: "13px", fontWeight: 700,
@@ -396,6 +402,15 @@ export default function AdminDashboard() {
                 background: "var(--card-bg)", borderRadius: "14px", padding: "16px",
                 border: "1.5px solid var(--border)", display: "flex", flexDirection: "column", gap: "10px",
               }}>
+                {materialError && (
+                  <div style={{
+                    padding: "8px 12px", background: "rgba(239, 68, 68, 0.1)",
+                    border: "1px solid rgba(239, 68, 68, 0.3)", borderRadius: "8px",
+                    color: "#ef4444", fontSize: "12.5px", fontWeight: 500,
+                  }}>
+                    {materialError}
+                  </div>
+                )}
                 <input placeholder="Title *" value={materialForm.title}
                   onChange={(e) => setMaterialForm({ ...materialForm, title: e.target.value })}
                   style={inputStyle} />
@@ -415,7 +430,7 @@ export default function AdminDashboard() {
                     {submitting && <Loader2 size={13} className="animate-spin" />}
                     {submitting ? "Uploading…" : "Upload"}
                   </button>
-                  <button onClick={() => setShowAddMaterial(false)} style={{
+                  <button onClick={() => { setShowAddMaterial(false); setMaterialError(null); }} style={{
                     flex: 1, padding: "9px", borderRadius: "8px", background: "var(--surface-2)",
                     border: "1.5px solid var(--border)", fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
                     color: "var(--text-secondary)",

@@ -11,6 +11,7 @@ interface SidebarProps {
   onLogout: () => void;
   username: string;
   displayName: string;
+  avatarUrl?: string;
   dark: boolean;
   onToggleDark: () => void;
   isAdmin?: boolean;
@@ -18,6 +19,12 @@ interface SidebarProps {
 
 function getInitials(name: string) {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+}
+
+function getAvatarIndex(name: string) {
+  let sum = 0;
+  for (let i = 0; i < name.length; i++) sum += name.charCodeAt(i);
+  return sum % 6;
 }
 
 // ── Nav structure ─────────────────────────────────────────────────────────────
@@ -38,6 +45,7 @@ const userNavSections = [
       { icon: Briefcase, label: "Placements",       path: "/placements" },
       { icon: Bell,      label: "Announcements",    path: "/announcements" },
       { icon: FileText,  label: "Notes & Materials", path: "/materials" },
+      
     ],
   },
   {
@@ -60,8 +68,10 @@ const adminNavSections = [
   {
     label: "MAIN",
     items: [
-      { icon: Home,   label: "Home",    path: "/" },
-      { icon: Search, label: "Explore", path: "/explore" },
+      { icon: Home,          label: "Home",          path: "/" },
+      { icon: Search,        label: "Explore",        path: "/explore" },
+      { icon: Bell,          label: "Notifications",  path: "/notifications" },
+      { icon: MessageSquare, label: "Messages",       path: "/messages" },
     ],
   },
   {
@@ -92,7 +102,7 @@ const adminNavSections = [
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
 export default function Sidebar({
-  onLogout, username, displayName, dark, onToggleDark, isAdmin,
+  onLogout, username, displayName, avatarUrl, dark, onToggleDark, isAdmin,
 }: SidebarProps) {
   const [dmUnread, setDmUnread]       = useState(0);
   const [notifUnread, setNotifUnread] = useState(0);
@@ -101,23 +111,22 @@ export default function Sidebar({
   const onNotifPage = location.pathname === "/notifications";
 
   useEffect(() => {
-    if (isAdmin) return;
     import("../../api/dm").then(({ getUnreadCount }) => {
       const fetch = () => getUnreadCount().then(setDmUnread).catch(() => {});
       fetch();
       const iv = setInterval(fetch, 15_000);
       return () => clearInterval(iv);
     });
-  }, [isAdmin]);
+  }, []);
 
   useEffect(() => {
-    if (isAdmin || onNotifPage) { setNotifUnread(0); return; }
+    if (onNotifPage) { setNotifUnread(0); return; }
     import("../../api/notifications").then(({ getNotifications }) => {
       getNotifications()
         .then((data) => setNotifUnread(data.filter((n: any) => !n.read).length))
         .catch(() => {});
     });
-  }, [onNotifPage, isAdmin]);
+  }, [onNotifPage]);
 
   const sidebarBg   = dark ? "var(--sidebar-bg)" : "#ffffff";
   const activeBg    = dark ? "rgba(129,140,248,0.14)" : "var(--brand-50)";
@@ -128,7 +137,7 @@ export default function Sidebar({
   const badge = (path: string) => {
     if (path === "/notifications" && notifUnread > 0 && !onNotifPage)
       return { count: notifUnread, color: "var(--pink-500)" };
-    if (path === "/messages" && dmUnread > 0 && location.pathname !== "/messages")
+    if (path === "/messages" && dmUnread > 0 && !location.pathname.startsWith("/messages"))
       return { count: dmUnread, color: "#6366f1" };
     return null;
   };
@@ -257,15 +266,29 @@ export default function Sidebar({
           padding: "7px 10px", borderRadius: "10px",
           background: "var(--surface-2)", marginBottom: "6px",
         }}>
-          <div style={{
-            width: 30, height: 30, borderRadius: "50%",
-            background: "linear-gradient(135deg, #6366f1, #ec4899)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "white", fontSize: "11px", fontWeight: 800, flexShrink: 0,
-            boxShadow: "0 2px 8px rgba(99,102,241,0.3)",
-          }}>
-            {getInitials(displayName)}
-          </div>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              style={{
+                width: 30, height: 30, borderRadius: "50%",
+                objectFit: "cover", flexShrink: 0,
+                boxShadow: "0 2px 8px rgba(99,102,241,0.3)",
+              }}
+            />
+          ) : (
+            <div style={{
+              width: 30, height: 30, borderRadius: "50%",
+              background: `var(--avatar-bg-${getAvatarIndex(displayName)})`,
+              border: `1px solid var(--avatar-border-${getAvatarIndex(displayName)})`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: `var(--avatar-fg-${getAvatarIndex(displayName)})`,
+              fontSize: "11px", fontWeight: 800, flexShrink: 0,
+              boxShadow: "0 2px 8px rgba(99,102,241,0.3)",
+            }}>
+              {getInitials(displayName)}
+            </div>
+          )}
           <div style={{ flex: 1, overflow: "hidden", minWidth: 0 }}>
             <p style={{
               fontSize: "12.5px", fontWeight: 700, color: "var(--text-primary)",

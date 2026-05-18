@@ -8,19 +8,14 @@ import { useNavigate } from "react-router-dom";
 type Tab = "posts" | "people";
 
 function UserAvatar({ name, size = 36 }: { name: string; size?: number }) {
-  const palettes = [
-    { bg: "#ede9fe", fg: "#7c3aed" }, { bg: "#fce7f3", fg: "#db2777" },
-    { bg: "#d1fae5", fg: "#059669" }, { bg: "#fef3c7", fg: "#d97706" },
-    { bg: "#dbeafe", fg: "#2563eb" }, { bg: "#f3e8ff", fg: "#9333ea" },
-  ];
-  const { bg, fg } = palettes[name.charCodeAt(0) % palettes.length];
+  const index = name ? name.charCodeAt(0) % 6 : 0;
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%", flexShrink: 0,
-      background: `linear-gradient(135deg, ${bg}, ${fg}30)`,
-      border: `2px solid ${fg}25`,
+      background: `var(--avatar-bg-${index})`,
+      border: `2px solid var(--avatar-border-${index})`,
       display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: size * 0.34, fontWeight: 700, color: fg,
+      fontSize: size * 0.34, fontWeight: 700, color: `var(--avatar-fg-${index})`,
     }}>
       {name[0]?.toUpperCase()}
     </div>

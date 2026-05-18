@@ -83,11 +83,11 @@ export default function MaterialsPage() {
                 >
                   <div style={{
                     width: 40, height: 40, borderRadius: "8px",
-                    background: type === "pdf" ? "#fecaca" : "#bfdbfe",
+                    background: type === "pdf" ? "var(--pdf-bg)" : "var(--docx-bg)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     flexShrink: 0,
                   }}>
-                    <FileText size={18} style={{ color: type === "pdf" ? "#dc2626" : "#2563eb" }} />
+                    <FileText size={18} style={{ color: type === "pdf" ? "var(--pdf-color)" : "var(--docx-color)" }} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
@@ -104,18 +104,18 @@ export default function MaterialsPage() {
                   </div>
                   <a href={m.file_url} download style={{
                     padding: "6px 12px", borderRadius: "8px",
-                    background: type === "pdf" ? "rgba(220,38,38,0.1)" : "rgba(37,99,235,0.1)",
-                    border: `1px solid ${type === "pdf" ? "#fecaca" : "#bfdbfe"}`,
-                    color: type === "pdf" ? "#dc2626" : "#2563eb",
+                    background: type === "pdf" ? "rgba(239, 68, 68, 0.08)" : "rgba(59, 130, 246, 0.08)",
+                    border: `1px solid ${type === "pdf" ? "var(--pdf-border)" : "var(--docx-border)"}`,
+                    color: type === "pdf" ? "var(--pdf-color)" : "var(--docx-color)",
                     fontSize: "11px", fontWeight: 700,
                     textDecoration: "none", display: "flex", alignItems: "center", gap: "4px",
                     cursor: "pointer", transition: "all 0.15s", flexShrink: 0,
                   }}
                     onMouseEnter={e => {
-                      (e.currentTarget as HTMLAnchorElement).style.background = type === "pdf" ? "rgba(220,38,38,0.15)" : "rgba(37,99,235,0.15)";
+                      (e.currentTarget as HTMLAnchorElement).style.background = type === "pdf" ? "rgba(239, 68, 68, 0.14)" : "rgba(59, 130, 246, 0.14)";
                     }}
                     onMouseLeave={e => {
-                      (e.currentTarget as HTMLAnchorElement).style.background = type === "pdf" ? "rgba(220,38,38,0.1)" : "rgba(37,99,235,0.1)";
+                      (e.currentTarget as HTMLAnchorElement).style.background = type === "pdf" ? "rgba(239, 68, 68, 0.08)" : "rgba(59, 130, 246, 0.08)";
                     }}
                   >
                     <Download size={11} /> Download
